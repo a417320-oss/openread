@@ -1,0 +1,39 @@
+param(
+    [string]$DesktopDirectory=[Environment]::GetFolderPath('Desktop'),
+    [string]$ProgramsDirectory=(Join-Path ([Environment]::GetFolderPath('StartMenu')) 'Programs'),
+    [string]$StateDirectory
+)
+$ErrorActionPreference='Stop'
+[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false)
+$projectRoot=Split-Path $PSScriptRoot -Parent
+if (!$StateDirectory) { $StateDirectory=Join-Path $projectRoot '.cache\plus' }
+. (Join-Path $PSScriptRoot 'environment.ps1')
+$nodePath=Get-ReadAnyNode -ProjectRoot $projectRoot
+$nodeMajor=[int]((& $nodePath --version) -replace '^v(\d+).*','$1')
+if ($nodeMajor -lt 24) { throw 'The Plus connection requires Node.js 24 or later.' }
+$powerShellPath=Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+$launcherPath=Join-Path $PSScriptRoot 'launch.ps1'
+$executable=Join-Path $projectRoot 'runtime\app.exe'
+if (!(Test-Path -LiteralPath $executable -PathType Leaf)) { throw 'ReadAny is not installed.' }
+New-Item -ItemType Directory -Path $StateDirectory -Force | Out-Null
+@{nodePath=$nodePath} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $StateDirectory 'runtime.json') -Encoding UTF8
+$backupDirectory=Join-Path $StateDirectory 'shortcut-backups'
+New-Item -ItemType Directory -Path $backupDirectory -Force | Out-Null
+$shortcutShell=New-Object -ComObject WScript.Shell
+foreach ($location in @(@{name='desktop';directory=$DesktopDirectory},@{name='start-menu';directory=$ProgramsDirectory})) {
+    New-Item -ItemType Directory -Path $location.directory -Force | Out-Null
+    $shortcutPath=Join-Path $location.directory 'ReadAny.lnk'
+    $backupPath=Join-Path $backupDirectory ($location.name + '-ReadAny.lnk')
+    if ((Test-Path -LiteralPath $shortcutPath) -and !(Test-Path -LiteralPath $backupPath)) {
+        Copy-Item -LiteralPath $shortcutPath -Destination $backupPath
+    }
+    $shortcut=$shortcutShell.CreateShortcut($shortcutPath)
+    $shortcut.TargetPath=$powerShellPath
+    $shortcut.Arguments='-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $launcherPath + '"'
+    $shortcut.WorkingDirectory=$projectRoot
+    $shortcut.IconLocation=$executable + ',0'
+    $shortcut.Description='ReadAny with automatic ChatGPT subscription connection'
+    $shortcut.WindowStyle=7
+    $shortcut.Save()
+    Write-Output "Updated ReadAny shortcut: $shortcutPath"
+}

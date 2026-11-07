@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { generateKeyPair, SignJWT, exportJWK, createLocalJWKSet } from 'jose'
 import { ChatGPTAuth, AUTH, RESOURCE, PLAN_SCOPE } from './oauth.mjs'
 import { initialState, openStore, readState } from './storage.mjs'
-import { configureSettings, accountModels, BRIDGE_URL } from './configure.mjs'
+import { configureSettings, hasCurrentConfiguration, accountModels, BRIDGE_URL } from './configure.mjs'
 import { toResponses, convertResponse } from './protocol.mjs'
 import { createHandler } from './server.mjs'
 
@@ -252,4 +252,16 @@ test('model setup authenticates only to the loopback bridge and rejects incomple
     return Response.json({ data: [{ id: 'account-model' }] })
   }), ['account-model'])
   await assert.rejects(accountModels(state, async () => Response.json({ error: { message: 'Authorize ChatGPT first' } }, { status: 401 })), /Authorize ChatGPT first/)
+})
+
+test('startup repairs an empty model list or changed protocol even if endpoint identity is retained', () => {
+  const saved = configureSettings({ aiConfig: { endpoints: [] } }, 'local-key', ['model-a', 'model-b'])
+  assert.equal(hasCurrentConfiguration(saved, 'local-key', ['model-a', 'model-b']), true)
+  for (const patch of [{ models: [] }, { modelsFetched: false }, { useExactRequestUrl: true }, { provider: 'custom' }]) {
+    const stale = structuredClone(saved)
+    Object.assign(stale.aiConfig.endpoints[0], patch)
+    assert.equal(hasCurrentConfiguration(stale, 'local-key', ['model-a', 'model-b']), false)
+    const repaired = configureSettings(stale, 'local-key', ['model-a', 'model-b'])
+    assert.equal(hasCurrentConfiguration(repaired, 'local-key', ['model-a', 'model-b']), true)
+  }
 })

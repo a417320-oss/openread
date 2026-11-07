@@ -6,11 +6,11 @@ ReadAny v1.3.6 原版的 OpenAI 配置要求 API 密钥。本机的 `plus-bridge
 
 ## 首次连接
 
-1. 双击项目根目录的 `Start-ReadAny.cmd`，启动仅监听 `127.0.0.1:38618` 的连接服务。
+1. 双击桌面的 **ReadAny**，或项目根目录的 `Start-ReadAny.cmd`，启动仅监听 `127.0.0.1:38618` 的连接服务。
 2. 浏览器打开 <http://127.0.0.1:38618/>，点击 **Continue with ChatGPT**。
 3. 在 OpenAI 官方页面登录你的 Plus 账号，检查并授权使用 ChatGPT 订阅额度。
    是否支持该账号、地区和所选模型，以 OpenAI 的授权及实际请求结果为准。
-4. 页面显示已连接后，再次双击 `Start-ReadAny.cmd`。
+4. 页面显示已连接后，再次打开桌面的 ReadAny。
    脚本会查询账号可用模型，正常关闭 ReadAny、备份设置并配置本机连接，再打开应用。
 5. 若仍在首次引导页面，AI 设置会自动带入；点击「测试连接」，成功后继续「下一步」。
 
@@ -24,7 +24,13 @@ ReadAny v1.3.6 原版的 OpenAI 配置要求 API 密钥。本机的 `plus-bridge
 | API 密钥 | 自动生成的本机连接密钥，不是 OpenAI API Key 或登录令牌 |
 | 模型 | 从登录账号的模型目录选择；保留仍可用的现有选择 |
 
-请使用上述启动脚本；直接从开始菜单打开原版应用，不会自动启动连接服务。
+2026-11-08 起，桌面和当前用户开始菜单的 ReadAny 快捷方式均指向 Plus 启动器，
+会先启动连接服务、检查/恢复已选模型，再打开阅读器。以后可直接使用原有桌面图标。
+原始快捷方式备份在 `.cache/plus/shortcut-backups`；Node 路径固定在
+`.cache/plus/runtime.json`，不依赖 Codex 提供的 PATH。
+没有显式代理环境变量时，后台服务继承本机已有的 Windows 系统代理；不会修改系统代理设置。
+启动时还会检查模型列表和请求模式；即使端点名称还在，只要模型列表被清空或请求模式
+不适用于本机连接，也会补齐设置。已经有效的已选模型会保留。
 阅读本身可离线，AI 请求需要联网。本连接不会切换到单独计费的 API Key。
 
 ## 额度、数据和限制
@@ -45,7 +51,7 @@ OAuth 令牌使用 Windows 当前用户的 DPAPI 加密，保存在忽略提交�
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File plus-bridge/control.ps1 status
 powershell -NoProfile -ExecutionPolicy Bypass -File plus-bridge/control.ps1 stop
-node --test plus-bridge/bridge.test.mjs deployment/verify.test.mjs
+node --test plus-bridge/bridge.test.mjs plus-bridge/desktop.test.mjs deployment/verify.test.mjs
 ```
 
 日志在 `.cache/plus/stdout.log` 和 `stderr.log`；程序不记录令牌和请求正文。
@@ -76,8 +82,28 @@ node --test plus-bridge/bridge.test.mjs deployment/verify.test.mjs
 
 ```powershell
 $env:READANY_VERIFY_PLUS='1'
-node --test plus-bridge/bridge.test.mjs deployment/verify.test.mjs
+$env:READANY_VERIFY_DESKTOP='1'
+node --test plus-bridge/bridge.test.mjs plus-bridge/desktop.test.mjs deployment/verify.test.mjs
 ```
+
+需要修复或重新生成桌面与开始菜单入口时：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File plus-bridge/install-shortcuts.ps1
+```
+
+真实桌面启动回归测试会正常关闭应用、停止后台服务，移除测试进程内的代理环境变量
+及 Node 专用 PATH，再通过桌面快捷方式连续启动两次，确认模型和连接保留。
+不读取阅读窗口或书籍内容。窗口均正常关闭并等待退出宽限期后，如果同一路径的应用
+仍留下无窗口后台进程，才清理该残留；仍有窗口时中止验收。最后保留 ReadAny 打开。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File deployment/desktop-launch-smoke.ps1 -Rounds 2
+```
+
+2026-11-08 验收：真实桌面快捷方式在无 Codex 代理环境变量、无 Node 专用 PATH 的
+环境下连续两次冷启动成功；每次都保留 `gpt-6.1-sol` 和 8 个模型，并自动启动 Plus 服务。
+最终实际调用取得 HTTP 200 和回复 `OK`。
 
 依赖重装（Node.js 24，其他源代码开发依赖无需安装）：
 

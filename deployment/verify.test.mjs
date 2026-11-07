@@ -63,6 +63,22 @@ test('authorized Plus deployment has a selected account model and a healthy loca
   assert.equal(health.connected, true)
 })
 
+test('installed desktop and Start menu entries route through the Plus launcher', { skip: process.env.READANY_VERIFY_DESKTOP !== '1' }, () => {
+  const command = '[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false);$shell=New-Object -ComObject WScript.Shell;$paths=@((Join-Path ([Environment]::GetFolderPath("Desktop")) "ReadAny.lnk"),(Join-Path ([Environment]::GetFolderPath("StartMenu")) "Programs\\ReadAny.lnk"));@($paths|ForEach-Object{$s=$shell.CreateShortcut($_);@{target=$s.TargetPath;arguments=$s.Arguments;cwd=$s.WorkingDirectory}})|ConvertTo-Json'
+  const result = spawnSync('powershell.exe', ['-NoProfile', '-Command', command], { encoding: 'utf8' })
+  assert.equal(result.status, 0, result.stderr)
+  const shortcuts = JSON.parse(result.stdout)
+  assert.equal(shortcuts.length, 2)
+  for (const shortcut of shortcuts) {
+    assert.match(shortcut.target, /WindowsPowerShell\\v1\.0\\powershell\.exe$/i)
+    assert.ok(shortcut.arguments.includes(`-File "${path.join(root, 'plus-bridge/launch.ps1')}"`))
+    assert.match(shortcut.arguments, /-WindowStyle Hidden/)
+    assert.equal(shortcut.cwd, root)
+  }
+  const runtime = JSON.parse(readFileSync(path.join(root, '.cache/plus/runtime.json'), 'utf8').replace(/^\uFEFF/, ''))
+  assert.ok(existsSync(runtime.nodePath))
+})
+
 test('DeepRead is removed and its former server port is closed', async () => {
   assert.equal(existsSync(path.join(root, '..', 'DeepRead')), false)
   await new Promise((resolve, reject) => {

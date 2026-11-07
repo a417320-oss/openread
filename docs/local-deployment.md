@@ -6,12 +6,12 @@
 
 - 项目目录：`D:\Heisenberg Reading\ReadAny`
 - 应用程序：`runtime\app.exe`
-- 启动入口：双击 `Start-ReadAny.cmd`；2026-11-07 起该脚本同时启动本机 Plus 连接服务。
+- 启动入口：直接打开桌面或开始菜单的 ReadAny，也可双击 `Start-ReadAny.cmd`；都会启动本机 Plus 连接服务并保留模型选择。
 - 使用方式：这是桌面应用，直接导入书籍阅读，无需启动本地 HTTP 服务。
 - 首次运行：按引导完成初始化；AI 配置可稍后填写服务商、地址、模型和 API Key。
 
 使用 ChatGPT Plus 订阅的登录、自动配置和启停方法见 [Plus 连接说明](plus-connection.md)。
-原版应用的开始菜单入口可以直接阅读；该入口不会自动启动本机 Plus 连接服务。
+2026-11-08 已将桌面和开始菜单入口统一到 Plus 启动器，原始快捷方式保留备份。
 
 运行数据默认在 `%APPDATA%\com.readany.app`，WebView2 缓存位于
 `%LOCALAPPDATA%\com.readany.app`。关闭应用后备份整个数据目录；

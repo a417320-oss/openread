@@ -7,6 +7,14 @@ import { readState, protect } from './storage.mjs'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 export const BRIDGE_URL = 'http://127.0.0.1:38618/v1'
 
+export function hasCurrentConfiguration(settings, localKey, models) {
+  const active = settings.aiConfig?.endpoints?.find(endpoint => endpoint.id === settings.aiConfig?.activeEndpointId)
+  return active?.id === 'readany-chatgpt-plan' && active.provider === 'openai' &&
+    active.apiKey === localKey && active.baseUrl === BRIDGE_URL && active.useExactRequestUrl === false &&
+    active.modelsFetched === true && Array.isArray(active.models) &&
+    active.models.includes(settings.aiConfig.activeModel) && models.includes(settings.aiConfig.activeModel)
+}
+
 export function configureSettings(settings, localKey, models, now = Date.now()) {
   if (!localKey || !Array.isArray(models) || !models.length || models.some(model => typeof model !== 'string' || !model)) throw new Error('No account models available; finish ChatGPT authorization first.')
   const result = structuredClone(settings)
@@ -45,15 +53,14 @@ export async function applyConfiguration({ request = fetch } = {}) {
   } catch (error) { if (error.code !== 'ENOENT') throw error }
   const settingsPath = path.join(dataRoot, 'readany-store/settings.json')
   const before = JSON.parse(await readFile(settingsPath, 'utf8'))
-  const active = before.aiConfig?.endpoints?.find(endpoint => endpoint.id === before.aiConfig?.activeEndpointId)
-  if (active?.id === 'readany-chatgpt-plan' && active.apiKey === state.localKey && active.baseUrl === BRIDGE_URL && models.includes(before.aiConfig.activeModel)) {
+  if (hasCurrentConfiguration(before, state.localKey, models)) {
     return { model: before.aiConfig.activeModel, modelCount: models.length, changed: false }
   }
   // Graceful close flushes ReadAny's pending settings before editing its file.
   const executable = path.join(root, 'runtime/app.exe')
-  const close = spawnSync('powershell.exe', ['-NoProfile', '-Command',
-    '$ErrorActionPreference="Stop";$apps=@(Get-Process -Name app -ErrorAction SilentlyContinue|Where-Object {$_.Path -eq $env:READANY_CONFIG_EXE});foreach($app in $apps){if(!$app.CloseMainWindow()){throw "Close ReadAny before applying AI settings"};if(!$app.WaitForExit(10000)){throw "ReadAny is still open; close it before retrying"}}'],
-    { env: { ...process.env, READANY_CONFIG_EXE: executable }, encoding: 'utf8', windowsHide: true, timeout: 15000 })
+  const close = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
+    '$ErrorActionPreference="Stop";. $env:READANY_CLOSE_HELPER;Close-ReadAnyApplication -ExecutablePath $env:READANY_CONFIG_EXE'],
+    { env: { ...process.env, READANY_CONFIG_EXE: executable, READANY_CLOSE_HELPER: path.join(root, 'plus-bridge/close-app.ps1') }, encoding: 'utf8', windowsHide: true, timeout: 35000 })
   if (close.status !== 0) throw new Error('Please close ReadAny, then run configuration again.')
   const raw = await readFile(settingsPath, 'utf8')
   const next = configureSettings(JSON.parse(raw), state.localKey, models)

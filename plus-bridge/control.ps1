@@ -28,7 +28,9 @@ New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null
 $userSid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 & icacls.exe $cacheDir /inheritance:r /grant:r "*$($userSid):(OI)(CI)F" '*S-1-5-18:(OI)(CI)F' | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Could not protect local credential directory' }
-$nodePath=(Get-Command node -CommandType Application | Select-Object -First 1).Source
+. (Join-Path $PSScriptRoot 'environment.ps1')
+$nodePath=Get-ReadAnyNode -ProjectRoot $projectRoot
+Initialize-ReadAnyProxy
 $entry=Join-Path $PSScriptRoot 'server.mjs'
 $running=Start-Process -FilePath $nodePath -ArgumentList @('--use-env-proxy',('"'+$entry+'"')) -WorkingDirectory $projectRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $cacheDir 'stdout.log') -RedirectStandardError (Join-Path $cacheDir 'stderr.log')
 @{processId=$running.Id;startedAt=$running.StartTime.ToUniversalTime().ToString('o')} | ConvertTo-Json | Set-Content -LiteralPath $recordPath -Encoding UTF8

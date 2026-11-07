@@ -1,5 +1,6 @@
 $ErrorActionPreference='Stop'
 $projectRoot=Split-Path $PSScriptRoot -Parent
+. (Join-Path $PSScriptRoot 'environment.ps1')
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'control.ps1') start
 if ($LASTEXITCODE -ne 0) { throw 'Could not start the ChatGPT connection service.' }
 $health=Invoke-RestMethod 'http://127.0.0.1:38618/health' -TimeoutSec 5
@@ -8,7 +9,7 @@ if (!$health.planEnabled) {
     Write-Output 'Complete ChatGPT authorization in your browser, then run Start-ReadAny.cmd again.'
     exit 0
 }
-$nodePath=(Get-Command node -CommandType Application | Select-Object -First 1).Source
+$nodePath=Get-ReadAnyNode -ProjectRoot $projectRoot
 & $nodePath (Join-Path $PSScriptRoot 'configure.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Could not apply ChatGPT settings. Existing settings have been preserved.' }
 $executable=Join-Path $projectRoot 'runtime\app.exe'
