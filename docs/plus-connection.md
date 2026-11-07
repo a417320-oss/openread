@@ -56,6 +56,23 @@ node --test plus-bridge/bridge.test.mjs deployment/verify.test.mjs
 2026-11-07 修复登录页 `no-referrer` 导致浏览器表单提交 `Origin: null` 的问题：
 普通页面使用 `same-origin`，OAuth 回调保留 `no-referrer`；未知来源与无效 CSRF 仍被拒绝。
 
+## 本机接通验收
+
+2026-11-07 已完成真实账号授权，读取到 8 个可用模型，并在 ReadAny 中选定
+`gpt-6.1-sol`。通过 ReadAny 保存的本机连接配置发送简短流式请求，得到 HTTP 200、
+完整终止事件和回复「ReadAny Plus 连接成功」。ReadAny 自带「测试连接」也显示
+「连接成功，已实际调用模型 gpt-6.1-sol」。未使用书籍正文作为验收请求内容。
+
+首次引导的端点切换可能清空模型选择；完成引导后，可在「设置 → AI → 模型」重新选择。
+已经配置成功后，继续使用根目录 `Start-ReadAny.cmd` 启动。
+
+已授权安装环境的验证命令（检查保存的模型及本机连接状态，不额外发送推理请求）：
+
+```powershell
+$env:READANY_VERIFY_PLUS='1'
+node --test plus-bridge/bridge.test.mjs deployment/verify.test.mjs
+```
+
 依赖重装（Node.js 24，其他源代码开发依赖无需安装）：
 
 ```powershell

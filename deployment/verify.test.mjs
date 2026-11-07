@@ -46,6 +46,20 @@ test('desktop app has initialized its SQLite database', () => {
   assert.equal(readFileSync(database).subarray(0, 16).toString(), 'SQLite format 3\0')
 })
 
+test('authorized Plus deployment has a selected account model and a healthy local connection', { skip: process.env.READANY_VERIFY_PLUS !== '1' }, async () => {
+  const settings = JSON.parse(readFileSync(path.join(process.env.APPDATA, 'com.readany.app/readany-store/settings.json'), 'utf8'))
+  const endpoint = settings.aiConfig.endpoints.find(item => item.id === settings.aiConfig.activeEndpointId)
+  assert.equal(endpoint.id, 'readany-chatgpt-plan')
+  assert.equal(endpoint.baseUrl, 'http://127.0.0.1:38618/v1')
+  assert.ok(endpoint.models.includes(settings.aiConfig.activeModel), 'Select a model from the authorized account catalog')
+  assert.ok(typeof endpoint.apiKey === 'string' && endpoint.apiKey.length >= 32)
+  const response = await fetch('http://127.0.0.1:38618/health', { signal: AbortSignal.timeout(5000) })
+  assert.equal(response.status, 200)
+  const health = await response.json()
+  assert.equal(health.planEnabled, true)
+  assert.equal(health.connected, true)
+})
+
 test('DeepRead is removed and its former server port is closed', async () => {
   assert.equal(existsSync(path.join(root, '..', 'DeepRead')), false)
   await new Promise((resolve, reject) => {
