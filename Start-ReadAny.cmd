@@ -6,4 +6,9 @@ if not exist "runtime\app.exe" (
     pause
     exit /b 1
 )
-start "" /d "%~dp0runtime" "%~dp0runtime\app.exe"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0plus-bridge\launch.ps1"
+if errorlevel 1 (
+    echo ReadAny could not start. See the error above or docs/plus-connection.md.
+    pause
+    exit /b 1
+)

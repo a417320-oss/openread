@@ -1,0 +1,8 @@
+{
+  "name": "readany-chatgpt-plan-bridge",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test *.test.mjs" },
+  "dependencies": { "jose": "^6.0.0" },
+  "engines": { "node": ">=24.0.0" }
+}
