@@ -36,7 +36,9 @@ export function createHandler(auth, { request = fetch } = {}) {
     const permittedOrigins = [origin, 'http://tauri.localhost', 'https://tauri.localhost', 'tauri://localhost']
     res.setHeader('Cache-Control', 'no-store')
     res.setHeader('X-Content-Type-Options', 'nosniff')
-    res.setHeader('Referrer-Policy', 'no-referrer')
+    // no-referrer makes native form POSTs send Origin: null in browsers.
+    // Preserve same-origin form attribution; keep OAuth callback URLs private below.
+    res.setHeader('Referrer-Policy', 'same-origin')
     res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; form-action 'self' https://auth.openai.com; frame-ancestors 'none'; base-uri 'none'")
     try {
       if (req.headers.host !== new URL(origin).host) throw new ConnectionError('Invalid local host', 403)
@@ -60,6 +62,7 @@ export function createHandler(auth, { request = fetch } = {}) {
         return
       }
       if (url.pathname === '/auth/callback' && req.method === 'GET') {
+        res.setHeader('Referrer-Policy', 'no-referrer')
         const enabled = await auth.complete(url.searchParams)
         // Remove the code and state from the address bar immediately.
         res.writeHead(303, { Location: enabled ? '/?connected=1' : '/?permission=missing' }); res.end(); return

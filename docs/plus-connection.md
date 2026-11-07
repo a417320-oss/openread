@@ -53,6 +53,9 @@ node --test plus-bridge/bridge.test.mjs deployment/verify.test.mjs
 本机访问限制、DPAPI 重启读取和设置保留；模拟测试通过不代表真实账号已授权。
 真实登录、账号模型查询及一次完成的推理请求后，才能确认订阅接通。
 
+2026-11-07 修复登录页 `no-referrer` 导致浏览器表单提交 `Origin: null` 的问题：
+普通页面使用 `same-origin`，OAuth 回调保留 `no-referrer`；未知来源与无效 CSRF 仍被拒绝。
+
 依赖重装（Node.js 24，其他源代码开发依赖无需安装）：
 
 ```powershell

@@ -170,11 +170,39 @@ test('HTTP bridge rejects foreign origins and missing local keys; forwards offic
   assert.equal((await response.json()).error.code, 'subscription_sharing_user_not_eligible')
   assert.equal(upstreamCalls, 2)
   const loginPage = await fetch(base)
+  assert.equal(loginPage.headers.get('referrer-policy'), 'same-origin')
   assert.match(loginPage.headers.get('content-security-policy'), /form-action 'self' https:\/\/auth\.openai\.com/)
   const html = await loginPage.text()
   assert.equal(html.includes('test-oauth'), false)
   assert.equal(html.includes(store.state.localKey), false)
   assert.equal((await fetch(base + '/auth/start', { method: 'POST', body: 'csrf=wrong' })).status, 403)
+})
+
+test('login forms retain their local Origin while callback parameters stay private', async (t) => {
+  const auth = new ChatGPTAuth(memory())
+  const server = http.createServer(createHandler(auth))
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
+  t.after(() => new Promise(resolve => server.close(resolve)))
+  const base = `http://127.0.0.1:${server.address().port}`
+  const page = await fetch(base)
+  // Native form navigation obeys this policy; no-referrer would serialize Origin as null.
+  assert.equal(page.headers.get('referrer-policy'), 'same-origin')
+  const html = await page.text()
+  const csrf = html.match(/name="csrf" value="([^"]+)"/)[1]
+  const body = new URLSearchParams({ csrf, clientId: 'new' })
+  for (const origin of ['null', 'https://untrusted.example', 'http://tauri.localhost']) {
+    const response = await fetch(base + '/auth/start', { method: 'POST', headers: { Origin: origin }, body, redirect: 'manual' })
+    assert.equal(response.status, 403)
+  }
+  const response = await fetch(base + '/auth/start', { method: 'POST', headers: { Origin: base }, body, redirect: 'manual' })
+  assert.equal(response.status, 303)
+  const target = new URL(response.headers.get('location'))
+  assert.equal(target.origin, AUTH)
+  assert.equal(target.pathname, '/api/accounts/authorize')
+  assert.equal(target.searchParams.get('redirect_uri'), base + '/auth/callback')
+  const callback = await fetch(base + '/auth/callback?state=invalid&code=private')
+  assert.equal(callback.status, 400)
+  assert.equal(callback.headers.get('referrer-policy'), 'no-referrer')
 })
 
 test('Windows DPAPI survives restart and does not store plaintext credentials', { skip: process.platform !== 'win32' }, async () => {
