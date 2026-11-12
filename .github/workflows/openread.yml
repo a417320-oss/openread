@@ -56,6 +56,13 @@ jobs:
         run: pnpm --filter app tauri build --bundles nsis
       - name: Create portable package
         run: powershell -NoProfile -ExecutionPolicy Bypass -File deployment/package-openread.ps1
+      - name: Verify native application starts
+        shell: pwsh
+        run: |
+          $app = Start-Process -FilePath './packages/app/src-tauri/target/release/app.exe' -PassThru
+          if ($app.WaitForExit(10000)) { throw "OpenRead exited during startup: $($app.ExitCode)" }
+          $app.CloseMainWindow() | Out-Null
+          if (!$app.WaitForExit(10000)) { Stop-Process -Id $app.Id }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
