@@ -12,7 +12,8 @@ New-Item -ItemType Directory (Join-Path $destination 'runtime\readany-cli\node_m
 foreach ($dependency in @('better-sqlite3','bindings','file-uri-to-path')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot "node_modules\$dependency") -Destination (Join-Path $destination "runtime\readany-cli\node_modules\$dependency") -Recurse
 }
-$nodePath=(Get-Command node.exe -CommandType Application).Source
+. (Join-Path $projectRoot 'plus-bridge\environment.ps1')
+$nodePath=Get-ReadAnyNode -ProjectRoot $projectRoot
 Copy-Item -LiteralPath $nodePath -Destination (Join-Path $destination 'runtime\node.exe')
 $licenseOutput=Join-Path $destination 'runtime\NODE-LICENSE.txt'
 $nodeVersion=(& $nodePath --version).Trim()
