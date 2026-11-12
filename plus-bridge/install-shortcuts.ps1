@@ -29,7 +29,10 @@ foreach ($location in @(@{name='desktop';directory=$DesktopDirectory},@{name='st
     if ((Test-Path -LiteralPath $shortcutPath) -and !(Test-Path -LiteralPath $backupPath)) {
         Copy-Item -LiteralPath $shortcutPath -Destination $backupPath
     }
-    $shortcut=$shortcutShell.CreateShortcut($shortcutPath)
+    # WScript shortcut persistence uses the system code page on some Windows images.
+    # Save through an ASCII filename, then use Unicode filesystem APIs to move it.
+    $temporaryShortcut=Join-Path ([IO.Path]::GetTempPath()) ('openread-' + [guid]::NewGuid().ToString() + '.lnk')
+    $shortcut=$shortcutShell.CreateShortcut($temporaryShortcut)
     $shortcut.TargetPath=$powerShellPath
     $shortcut.Arguments='-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $launcherPath + '"'
     $shortcut.WorkingDirectory=$projectRoot
@@ -37,6 +40,7 @@ foreach ($location in @(@{name='desktop';directory=$DesktopDirectory},@{name='st
     $shortcut.Description='OpenRead with automatic ChatGPT subscription connection'
     $shortcut.WindowStyle=7
     $shortcut.Save()
+    Move-Item -LiteralPath $temporaryShortcut -Destination $shortcutPath -Force
     # Migrate only this installation's old shortcut; leave other ReadAny installs alone.
     $legacyPath=Join-Path $location.directory 'ReadAny.lnk'
     if (Test-Path -LiteralPath $legacyPath) {

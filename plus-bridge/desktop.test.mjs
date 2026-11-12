@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile, copyFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -20,14 +20,17 @@ test('desktop and Start menu shortcuts use the Plus launcher and preserve origin
   const shortcutPath = path.join(desktop, 'OpenRead.lnk')
   const executable = path.join(fixture, 'app.exe')
   await writeFile(executable, 'test executable placeholder')
-  const env = { READANY_TEST_SHORTCUT: shortcutPath, READANY_TEST_EXE: executable }
+  const stagingShortcut = path.join(fixture, 'staging.lnk')
+  const env = { READANY_TEST_SHORTCUT: stagingShortcut, READANY_TEST_EXE: executable }
   try {
     powershell(['-Command', '$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:READANY_TEST_SHORTCUT);$s.TargetPath=$env:READANY_TEST_EXE;$s.Save()'], env)
+    await copyFile(stagingShortcut, shortcutPath)
     const original = await readFile(shortcutPath)
     const args = ['-File', path.join(root, 'plus-bridge/install-shortcuts.ps1'), '-DesktopDirectory', desktop, '-ProgramsDirectory', programs, '-StateDirectory', state, '-ExecutablePath', executable]
     powershell(args)
     for (const directory of [desktop, programs]) {
-      const data = JSON.parse(powershell(['-Command', '[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false);$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:READANY_TEST_SHORTCUT);@{target=$s.TargetPath;arguments=$s.Arguments;cwd=$s.WorkingDirectory;icon=$s.IconLocation}|ConvertTo-Json'], { READANY_TEST_SHORTCUT: path.join(directory, 'OpenRead.lnk') }))
+      await copyFile(path.join(directory, 'OpenRead.lnk'), stagingShortcut)
+      const data = JSON.parse(powershell(['-Command', '[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false);$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:READANY_TEST_SHORTCUT);@{target=$s.TargetPath;arguments=$s.Arguments;cwd=$s.WorkingDirectory;icon=$s.IconLocation}|ConvertTo-Json'], { READANY_TEST_SHORTCUT: stagingShortcut }))
       assert.match(data.target, /WindowsPowerShell\\v1\.0\\powershell\.exe$/i)
       assert.ok(data.arguments.includes(`-File "${path.join(root, 'plus-bridge/launch.ps1')}"`))
       assert.match(data.arguments, /-WindowStyle Hidden/)
