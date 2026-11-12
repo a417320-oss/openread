@@ -255,7 +255,7 @@ function parseCliJson<T>(result: CliRunResult): CommandResult<T> {
       ok: false,
       error: {
         code: "empty_cli_output",
-        message: result.stderr.trim() || "ReadAny CLI returned no JSON output.",
+        message: result.stderr.trim() || "OpenRead CLI returned no JSON output.",
       },
     };
   }
@@ -267,7 +267,7 @@ function parseCliJson<T>(result: CliRunResult): CommandResult<T> {
         ok: false,
         error: {
           code: "cli_failed",
-          message: result.stderr.trim() || "ReadAny CLI command failed.",
+          message: result.stderr.trim() || "OpenRead CLI command failed.",
           details: parsed,
         },
       };
@@ -292,7 +292,7 @@ function unwrapCommand<T>(result: CliRunResult, key: string): T {
   }
   const value = parsed.data[key];
   if (!value) {
-    throw new Error(`ReadAny CLI response did not include ${key}.`);
+    throw new Error(`OpenRead CLI response did not include ${key}.`);
   }
   return value;
 }
@@ -690,7 +690,7 @@ export function EpubDraftWorkspace({ draftId }: EpubDraftWorkspaceProps) {
       !window.confirm(
         t(
           "epubDraft.exportConfirm",
-          "Export this draft as a new EPUB? ReadAny will validate first and will not overwrite the source EPUB.",
+          "Export this draft as a new EPUB? OpenRead will validate first and will not overwrite the source EPUB.",
         ),
       )
     ) {

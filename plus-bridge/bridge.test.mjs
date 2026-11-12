@@ -45,7 +45,7 @@ test('OAuth dynamic registration uses PKCE, exact loopback callback and subscrip
   const { auth, store, transaction, query } = await authorize()
   assert.equal(transaction.origin, AUTH)
   assert.equal(transaction.searchParams.get('client_id'), 'dynamic_agent_client')
-  assert.equal(transaction.searchParams.get('agent_name_hint'), 'ReadAny')
+  assert.equal(transaction.searchParams.get('agent_name_hint'), 'OpenRead')
   assert.ok(transaction.searchParams.get('scope').includes(PLAN_SCOPE))
   assert.equal(await auth.complete(query), true)
   assert.equal(store.state.accounts[0].clientId, 'oaiapp_readany_test')
@@ -223,7 +223,7 @@ test('Windows DPAPI survives restart and does not store plaintext credentials', 
   } finally { await rm(directory, { recursive: true, force: true }) }
 })
 
-test('ReadAny configuration preserves unrelated settings, uses a local key and is idempotent', () => {
+test('OpenRead configuration preserves unrelated settings, uses a local key and is idempotent', () => {
   const original = { readSettings: { fontSize: 21 }, translationConfig: { provider: { id: 'microsoft' } },
     hasCompletedOnboarding: false, aiConfig: { endpoints: [{ id: 'existing', apiKey: 'keep-existing-key' }],
       activeEndpointId: 'existing', activeModel: 'other-model', maxTokens: 12000 } }

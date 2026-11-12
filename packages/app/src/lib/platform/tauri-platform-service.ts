@@ -275,24 +275,11 @@ export class TauriPlatformService implements IPlatformService {
   // ---- Update ----
 
   async checkUpdate(): Promise<UpdateInfo | null> {
-    const { check } = await import("@tauri-apps/plugin-updater");
-    const update = await check();
-    if (!update) return null;
-    return {
-      version: update.version,
-      notes: update.body || undefined,
-      date: update.date || undefined,
-    };
+    return null;
   }
 
   async installUpdate(): Promise<void> {
-    const { check } = await import("@tauri-apps/plugin-updater");
-    const update = await check();
-    if (update) {
-      await update.downloadAndInstall();
-      const { relaunch } = await import("@tauri-apps/plugin-process");
-      await relaunch();
-    }
+    throw new Error("Install OpenRead updates from https://github.com/a417320-oss/openread/releases");
   }
 
   // ---- KV Storage (backed by localStorage on desktop/web) ----

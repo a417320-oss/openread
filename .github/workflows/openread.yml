@@ -1,0 +1,63 @@
+name: OpenRead Windows
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cli-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - run: pnpm --filter @readany/cli... install --frozen-lockfile
+      - run: pnpm --filter @readany/cli test
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      NODE_OPTIONS: --max-old-space-size=8192
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: packages/app/src-tauri -> target
+      - name: Install dependencies
+        run: |
+          pnpm --filter app... --filter @readany/cli... install --frozen-lockfile
+          npm ci --prefix plus-bridge
+      - name: Core tests
+        run: pnpm test
+      - name: Bridge and publication tests
+        run: node --test plus-bridge/bridge.test.mjs plus-bridge/desktop.test.mjs deployment/openread.test.mjs
+      - name: Build frontend and verify real offline OCR
+        run: |
+          pnpm --filter app build
+          node scripts/ocr-smoke.mjs
+      - name: Build desktop
+        run: pnpm --filter app tauri build --bundles nsis
+      - name: Create portable package
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File deployment/package-openread.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenRead-windows-x64
+          path: |
+            .cache/release/*.zip
+            .cache/release/*.sha256
+            packages/app/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error

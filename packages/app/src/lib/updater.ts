@@ -2,6 +2,10 @@ import i18n from "@readany/core/i18n";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
 
+// OpenRead releases are installed manually until this fork owns a signing key.
+// Never fetch the upstream ReadAny feed: doing so could replace these improvements.
+const AUTOMATIC_UPDATES_ENABLED = false;
+
 export interface UpdateInfo {
   version: string;
   notes?: string;
@@ -55,6 +59,7 @@ function notifyListeners() {
 }
 
 export async function checkForUpdate(): Promise<UpdateInfo | null> {
+  if (!AUTOMATIC_UPDATES_ENABLED) return null;
   updateStatus = "checking";
   errorMessage = "";
   notifyListeners();
@@ -96,6 +101,7 @@ export async function checkForUpdate(): Promise<UpdateInfo | null> {
 }
 
 export async function downloadAndInstall(): Promise<boolean> {
+  if (!AUTOMATIC_UPDATES_ENABLED) return false;
   const update = await check();
 
   if (!update) {

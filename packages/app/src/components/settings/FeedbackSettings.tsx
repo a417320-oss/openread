@@ -426,7 +426,7 @@ function FeedbackDetailView({
           #{issueNumber} {title}
         </span>
         <a
-          href={`https://github.com/codedogQBY/ReadAny/issues/${issueNumber}`}
+          href={`https://github.com/a417320-oss/openread/issues/${issueNumber}`}
           target="_blank"
           rel="noopener noreferrer"
           className="ml-auto text-muted-foreground hover:text-foreground"

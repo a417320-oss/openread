@@ -9,8 +9,8 @@ import { WorkerMessageHandler } from "pdfjs-dist/build/pdf.worker.mjs";
 globalThis.pdfjsWorker ??= { WorkerMessageHandler };
 
 // Configure PDF.js worker — always set to match the API version
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
-const PDFJS_CDN_BASE = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs-local/pdf.worker.mjs';
+const PDFJS_CDN_BASE = '/vendor/pdfjs-local';
 const PDFJS_DOCUMENT_OPTIONS = {
   useWorkerFetch: false,
   isEvalSupported: false,

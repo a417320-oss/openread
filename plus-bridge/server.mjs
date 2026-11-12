@@ -26,7 +26,7 @@ function json(response, status, data) {
 }
 function page(response, text) {
   response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-  response.end(`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>ReadAny · ChatGPT 连接</title><style>body{font:16px/1.65 system-ui;background:#f8f6ef;color:#29261f;max-width:720px;margin:8vh auto;padding:24px}main{background:#fff;border:1px solid #ded9cc;border-radius:18px;padding:36px}h1{font-size:26px}button,a{font:inherit}button{padding:11px 20px;background:#242424;color:#fff;border:0;border-radius:8px;cursor:pointer}form{margin:18px 0}small{color:#68645b}a{color:#665235}code{overflow-wrap:anywhere}</style><main>${text}</main></html>`)
+  response.end(`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>OpenRead · ChatGPT 连接</title><style>body{font:16px/1.65 system-ui;background:#f8f6ef;color:#29261f;max-width:720px;margin:8vh auto;padding:24px}main{background:#fff;border:1px solid #ded9cc;border-radius:18px;padding:36px}h1{font-size:26px}button,a{font:inherit}button{padding:11px 20px;background:#242424;color:#fff;border:0;border-radius:8px;cursor:pointer}form{margin:18px 0}small{color:#68645b}a{color:#665235}code{overflow-wrap:anywhere}</style><main>${text}</main></html>`)
 }
 
 export function createHandler(auth, { request = fetch } = {}) {
@@ -58,7 +58,7 @@ export function createHandler(auth, { request = fetch } = {}) {
         const fields = `<input type="hidden" name="csrf" value="${csrf}">`
         const accountForms = auth.store.state.accounts.map((account, index) =>
           `<form method="post" action="/auth/start">${fields}<input type="hidden" name="clientId" value="${escape(account.clientId)}"><button data-oai-siwc-button>Continue with ChatGPT</button><br><small>账户 ${index + 1}：${escape(account.email || '已保存的 ChatGPT 账户')}${account.clientId === auth.store.state.activeClientId ? '（当前）' : ''}</small></form>`).join('')
-        page(res, `<h1>ReadAny · ChatGPT 订阅连接</h1><p>${auth.enabled ? '已连接，可返回 ReadAny 使用 AI。' : '使用现有 ChatGPT Plus / Pro 订阅额度，连接后可在 ReadAny 中问答、总结和翻译。'}</p><p>额度与 ChatGPT 的订阅用量共享。阅读片段和提问将发送给 OpenAI；本服务不会切换到 API 付费路径。</p>${accountForms}<form method="post" action="/auth/start">${fields}<input type="hidden" name="clientId" value="new"><button data-oai-siwc-button>Continue with ChatGPT</button><br><small>${accountForms ? '添加另一个 ChatGPT 账户' : '登录并授权使用你的 ChatGPT 订阅'}</small></form>${auth.active?.accessToken ? `<form method="post" action="/auth/logout">${fields}<button>断开当前账户</button></form>` : ''}<p><a href="https://chatgpt.com/settings/usage" rel="noreferrer">查看 ChatGPT 用量与额度</a></p><small>登录和授权在 OpenAI 官方页面完成。账号密码不会交给 ReadAny。</small>`)
+        page(res, `<h1>OpenRead · ChatGPT 订阅连接</h1><p>${auth.enabled ? '已连接，可返回 OpenRead 使用 AI。' : '使用现有 ChatGPT Plus / Pro 订阅额度，连接后可在 OpenRead 中问答、总结和翻译。'}</p><p>额度与 ChatGPT 的订阅用量共享。阅读片段和提问将发送给 OpenAI；本服务不会切换到 API 付费路径。</p>${accountForms}<form method="post" action="/auth/start">${fields}<input type="hidden" name="clientId" value="new"><button data-oai-siwc-button>Continue with ChatGPT</button><br><small>${accountForms ? '添加另一个 ChatGPT 账户' : '登录并授权使用你的 ChatGPT 订阅'}</small></form>${auth.active?.accessToken ? `<form method="post" action="/auth/logout">${fields}<button>断开当前账户</button></form>` : ''}<p><a href="https://chatgpt.com/settings/usage" rel="noreferrer">查看 ChatGPT 用量与额度</a></p><small>登录和授权在 OpenAI 官方页面完成。账号密码不会交给 OpenRead。</small>`)
         return
       }
       if (url.pathname === '/auth/callback' && req.method === 'GET') {
@@ -131,5 +131,5 @@ export async function startBridge(port = 38618, directory = path.join(root, '.ca
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const server = await startBridge()
-  console.log(`ReadAny ChatGPT connection: http://127.0.0.1:${server.address().port}`)
+  console.log(`OpenRead ChatGPT connection: http://127.0.0.1:${server.address().port}`)
 }

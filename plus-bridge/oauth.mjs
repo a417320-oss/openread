@@ -31,7 +31,7 @@ export class ChatGPTAuth {
       response_type: 'code', redirect_uri: redirectUri, scope: SCOPES, resource: RESOURCE,
       state, nonce, code_challenge_method: 'S256', code_challenge: createHash('sha256').update(verifier).digest('base64url'),
     })
-    if (!account) params.set('agent_name_hint', 'ReadAny')
+    if (!account) params.set('agent_name_hint', 'OpenRead')
     if (account?.idToken) params.set('id_token_hint', account.idToken)
     if (account?.email) params.set('login_hint', account.email)
     if (account?.accessToken && !account.scopes.includes(PLAN_SCOPE)) params.set('prompt', 'consent')

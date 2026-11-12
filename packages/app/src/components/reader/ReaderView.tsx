@@ -48,6 +48,7 @@ import { FoliateViewer } from "./FoliateViewer";
 import { FooterBar } from "./FooterBar";
 import { NotebookPanel } from "./NotebookPanel";
 import { ReaderToolbar } from "./ReaderToolbar";
+import { PdfOcrDialog } from "./PdfOcrDialog";
 import { ResizeHandle } from "./ResizeHandle";
 import { SearchBar } from "./SearchBar";
 import { SelectionPopover } from "./SelectionPopover";
@@ -776,6 +777,7 @@ export function ReaderView({ bookId, tabId }: ReaderViewProps) {
   // Book document state
   const [bookDoc, setBookDoc] = useState<BookDoc | null>(null);
   const [bookFormat, setBookFormat] = useState<BookFormat>("EPUB");
+  const [showOcr, setShowOcr] = useState(false);
   const isFixedLayout = isFixedLayoutBook(bookFormat, bookDoc);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -3058,6 +3060,7 @@ export function ReaderView({ bookId, tabId }: ReaderViewProps) {
           {/* Floating Toolbar — overlays content area */}
           <ReaderToolbar
             tabId={tabId}
+            onOcr={bookFormat === "PDF" ? () => setShowOcr(true) : undefined}
             isVisible={toolbarVisible}
             onPrev={handleNavPrev}
             onNext={handleNavNext}
@@ -3090,6 +3093,7 @@ export function ReaderView({ bookId, tabId }: ReaderViewProps) {
           />
 
           {/* Floating Footer bar — overlays content area */}
+          {book && bookFormat === "PDF" && <PdfOcrDialog book={book} currentPage={currentPage} open={showOcr} onOpenChange={setShowOcr} />}
           <FooterBar
             tabId={tabId}
             totalPages={totalPages}

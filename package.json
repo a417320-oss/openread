@@ -1,5 +1,5 @@
 {
-  "name": "readany",
+  "name": "openread",
   "private": true,
   "license": "GPL-3.0-or-later",
   "scripts": {
@@ -24,7 +24,9 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "version:check": "node scripts/bump-version.js --check",
-    "version:set": "node scripts/bump-version.js"
+    "version:set": "node scripts/bump-version.js",
+    "test:ocr": "pnpm --filter @readany/core exec vitest run src/pdf",
+    "test:bridge": "node --test plus-bridge/bridge.test.mjs plus-bridge/desktop.test.mjs deployment/openread.test.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0"

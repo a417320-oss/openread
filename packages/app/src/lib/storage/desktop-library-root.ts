@@ -206,7 +206,8 @@ export async function migrateDesktopLibraryRoot(nextRoot: string): Promise<Migra
 
   const relativePaths = await collectManagedRelativePaths();
   const fontPaths = await collectDirRelativePaths(currentRoot, FONTS_DIR);
-  const allRelativePaths = Array.from(new Set([...relativePaths, ...fontPaths]));
+  const ocrPaths = await collectDirRelativePaths(currentRoot, "pdf-ocr");
+  const allRelativePaths = Array.from(new Set([...relativePaths, ...fontPaths, ...ocrPaths]));
 
   await closeDB();
   try {
@@ -216,6 +217,8 @@ export async function migrateDesktopLibraryRoot(nextRoot: string): Promise<Migra
   }
 
   await ensureTargetDirs(targetRoot);
+  const { mkdir } = await import("@tauri-apps/plugin-fs");
+  await mkdir(await joinWithinRoot(targetRoot, "pdf-ocr"), { recursive: true });
 
   const copiedSources: string[] = [];
   let movedFiles = 0;

@@ -75,7 +75,7 @@ export function LANSyncDialog({ open, onClose, mode }: LANSyncDialogProps) {
     setShowManualIPInput(false);
 
     try {
-      const deviceName = `ReadAny Desktop`;
+      const deviceName = `OpenRead Desktop`;
 
       const newServer = createLANServer({
         deviceName,
@@ -112,7 +112,7 @@ export function LANSyncDialog({ open, onClose, mode }: LANSyncDialogProps) {
     setServerStatus("starting");
 
     try {
-      const deviceName = `ReadAny Desktop`;
+      const deviceName = `OpenRead Desktop`;
 
       const newServer = createLANServer({
         deviceName,

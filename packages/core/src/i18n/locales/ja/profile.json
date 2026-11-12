@@ -14,7 +14,7 @@
     "avgDaily": "日平均",
     "readingActivity": "読書アクティビティ",
     "viewDetails": "詳細を見る",
-    "version": "ReadAny Mobile v{{version}}",
+    "version": "OpenRead Mobile v{{version}}",
     "storage": "ストレージ",
     "clearCache": "キャッシュを削除",
     "clearingCache": "削除中...",

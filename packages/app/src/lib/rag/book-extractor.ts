@@ -7,6 +7,8 @@ import { DocumentLoader } from "@/lib/reader/document-loader";
 import { buildChapterSectionGroups } from "@readany/core/rag";
 import type { ChapterSectionGroup, TocTreeItemLike } from "@readany/core/rag";
 import * as CFI from "foliate-js/epubcfi.js";
+import { pdfFingerprint } from "@readany/core/pdf/ocr";
+import { readOcrPage } from "@readany/core/pdf/ocr-cache";
 
 export interface TextSegment {
   text: string;
@@ -23,7 +25,9 @@ export interface ChapterData {
 export async function extractBookChapters(filePath: string): Promise<ChapterData[]> {
   const { readFile } = await import("@tauri-apps/plugin-fs");
   const fileBytes = await readFile(filePath);
-  const fileName = filePath.split("/").pop() || "book";
+  const fileName = filePath.split(/[\\/]/).pop() || "book";
+  // PDFs do not need a second Foliate document just to extract their text.
+  if (fileName.toLowerCase().endsWith(".pdf")) return extractPdfChapters(fileBytes);
   const blob = new Blob([fileBytes]);
   const file = new File([blob], fileName, { type: blob.type || "application/octet-stream" });
 
@@ -112,9 +116,9 @@ async function extractEpubTocFromFile(file: File): Promise<TocTreeItemLike[]> {
     const parser = new DOMParser();
     const containerDoc = parser.parseFromString(containerXml, "application/xml");
     const opfPath =
-      Array.from(containerDoc.getElementsByTagName("*")).find(
-        (element) => element.localName === "rootfile",
-      )?.getAttribute("full-path") || "content.opf";
+      Array.from(containerDoc.getElementsByTagName("*"))
+        .find((element) => element.localName === "rootfile")
+        ?.getAttribute("full-path") || "content.opf";
     const opfXml = await readTextEntry(opfPath);
     if (!opfXml) return [];
 
@@ -402,7 +406,8 @@ function extractBlockText(block: Element): string {
 
 async function extractPdfChapters(fileBytes: Uint8Array): Promise<ChapterData[]> {
   const pdfjsLib = await import("pdfjs-dist");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs-local/pdf.worker.mjs";
+  const fingerprint = await pdfFingerprint(fileBytes);
 
   const pdfDoc = await pdfjsLib.getDocument({
     data: new Uint8Array(fileBytes),
@@ -414,36 +419,43 @@ async function extractPdfChapters(fileBytes: Uint8Array): Promise<ChapterData[]>
   const numPages = pdfDoc.numPages;
   const pagesPerChapter = Math.max(1, Math.min(10, Math.ceil(numPages / 20)));
 
-  for (let start = 1; start <= numPages; start += pagesPerChapter) {
-    const end = Math.min(start + pagesPerChapter - 1, numPages);
-    const segments: TextSegment[] = [];
+  try {
+    for (let start = 1; start <= numPages; start += pagesPerChapter) {
+      const end = Math.min(start + pagesPerChapter - 1, numPages);
+      const segments: TextSegment[] = [];
 
-    for (let p = start; p <= end; p++) {
-      try {
-        const page = await pdfDoc.getPage(p);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items.map((item: any) => item.str ?? "").join(" ");
-        if (pageText.trim()) {
-          segments.push({
-            text: pageText.trim(),
-            cfi: `page:${p}`,
-          });
+      for (let p = start; p <= end; p++) {
+        try {
+          const page = await pdfDoc.getPage(p);
+          const textContent = await page.getTextContent();
+          const cached = await readOcrPage(fingerprint, p);
+          const pageText =
+            cached?.text ||
+            textContent.items.map((item) => ("str" in item ? item.str : "")).join(" ");
+          page.cleanup();
+          if (pageText.trim()) {
+            segments.push({
+              text: pageText.trim(),
+              cfi: `page:${p}`,
+            });
+          }
+        } catch {
+          // skip unreadable pages
         }
-      } catch {
-        // skip unreadable pages
+      }
+
+      if (segments.length > 0) {
+        chapters.push({
+          index: start - 1,
+          title: `Pages ${start}-${end}`,
+          content: segments.map((s) => s.text).join("\n\n"),
+          segments,
+        });
       }
     }
 
-    if (segments.length > 0) {
-      chapters.push({
-        index: start - 1,
-        title: `Pages ${start}-${end}`,
-        content: segments.map((s) => s.text).join("\n\n"),
-        segments,
-      });
-    }
+    return chapters;
+  } finally {
+    await pdfDoc.destroy();
   }
-
-  pdfDoc.destroy();
-  return chapters;
 }

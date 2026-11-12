@@ -1,4 +1,6 @@
 import { getPlatformService } from "../services";
+import { pdfFingerprint } from "./ocr";
+import { readOcrPage } from "./ocr-cache";
 
 export type PdfPageSummary = {
   source: "pdf";
@@ -52,10 +54,7 @@ async function loadPdfDocument(bytes: Uint8Array): Promise<{
   return { pdf: await loadingTask.promise };
 }
 
-async function readPdfBookFile(
-  bookId: string,
-  bookFilePath: string,
-): Promise<Uint8Array> {
+async function readPdfBookFile(bookId: string, bookFilePath: string): Promise<Uint8Array> {
   const platform = getPlatformService();
   const dataDir = await platform.getDataDir();
   const absolutePath = await platform.joinPath(dataDir, bookFilePath);
@@ -71,17 +70,21 @@ export async function listPdfPagesFromBookFile(
 ): Promise<PdfPageSummary[]> {
   const bytes = await readPdfBookFile(bookId, bookFilePath);
   const { pdf } = await loadPdfDocument(bytes);
-  return Array.from({ length: pdf.numPages }, (_, index) => {
-    const page = index + 1;
-    return {
-      source: "pdf" as const,
-      id: pageIdFromPage(page),
-      bookId,
-      index,
-      title: `Page ${page}`,
-      page,
-    };
-  });
+  try {
+    return Array.from({ length: pdf.numPages }, (_, index) => {
+      const page = index + 1;
+      return {
+        source: "pdf" as const,
+        id: pageIdFromPage(page),
+        bookId,
+        index,
+        title: `Page ${page}`,
+        page,
+      };
+    });
+  } finally {
+    await pdf.destroy();
+  }
 }
 
 export async function readPdfPageFromBookFile(
@@ -95,29 +98,36 @@ export async function readPdfPageFromBookFile(
 
   const bytes = await readPdfBookFile(bookId, bookFilePath);
   const { pdf } = await loadPdfDocument(bytes);
-  if (pageNumber > pdf.numPages) return null;
+  try {
+    if (pageNumber > pdf.numPages) return null;
 
-  const page = await pdf.getPage(pageNumber);
-  const textContent = await page.getTextContent();
-  const content = textContent.items
-    .map((item) => ("str" in item && typeof item.str === "string" ? item.str : ""))
-    .filter(Boolean)
-    .join(" ")
-    .replace(/\s+/g, " ")
-    .trim();
-  const limit = clampContentLimit(options.contentLimit);
-  const truncated = truncateContent(content, limit);
+    const page = await pdf.getPage(pageNumber);
+    const textContent = await page.getTextContent();
+    const cached = await readOcrPage(await pdfFingerprint(bytes), pageNumber);
+    const content =
+      cached?.text ||
+      textContent.items
+        .map((item) => ("str" in item && typeof item.str === "string" ? item.str : ""))
+        .filter(Boolean)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+    const limit = clampContentLimit(options.contentLimit);
+    const truncated = truncateContent(content, limit);
 
-  return {
-    source: "pdf",
-    id: pageIdFromPage(pageNumber),
-    bookId,
-    index: pageNumber - 1,
-    title: `Page ${pageNumber}`,
-    page: pageNumber,
-    cfi: `page:${pageNumber}`,
-    content: truncated.content,
-    contentTruncated: truncated.truncated,
-    contentLimit: limit,
-  };
+    return {
+      source: "pdf",
+      id: pageIdFromPage(pageNumber),
+      bookId,
+      index: pageNumber - 1,
+      title: `Page ${pageNumber}`,
+      page: pageNumber,
+      cfi: `page:${pageNumber}`,
+      content: truncated.content,
+      contentTruncated: truncated.truncated,
+      contentLimit: limit,
+    };
+  } finally {
+    await pdf.destroy();
+  }
 }

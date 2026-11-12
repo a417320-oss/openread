@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -17,22 +17,24 @@ test('desktop and Start menu shortcuts use the Plus launcher and preserve origin
   const fixture = await mkdtemp(path.join(root, '.cache/desktop-shortcut-test-'))
   const desktop = path.join(fixture, 'Desktop 中文'), programs = path.join(fixture, 'Programs 中文'), state = path.join(fixture, 'State')
   await mkdir(desktop); await mkdir(programs)
-  const shortcutPath = path.join(desktop, 'ReadAny.lnk')
-  const env = { READANY_TEST_SHORTCUT: shortcutPath, READANY_TEST_EXE: path.join(root, 'runtime/app.exe') }
+  const shortcutPath = path.join(desktop, 'OpenRead.lnk')
+  const executable = path.join(fixture, 'app.exe')
+  await writeFile(executable, 'test executable placeholder')
+  const env = { READANY_TEST_SHORTCUT: shortcutPath, READANY_TEST_EXE: executable }
   try {
     powershell(['-Command', '$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:READANY_TEST_SHORTCUT);$s.TargetPath=$env:READANY_TEST_EXE;$s.Save()'], env)
     const original = await readFile(shortcutPath)
-    const args = ['-File', path.join(root, 'plus-bridge/install-shortcuts.ps1'), '-DesktopDirectory', desktop, '-ProgramsDirectory', programs, '-StateDirectory', state]
+    const args = ['-File', path.join(root, 'plus-bridge/install-shortcuts.ps1'), '-DesktopDirectory', desktop, '-ProgramsDirectory', programs, '-StateDirectory', state, '-ExecutablePath', executable]
     powershell(args)
     for (const directory of [desktop, programs]) {
-      const data = JSON.parse(powershell(['-Command', '[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false);$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:READANY_TEST_SHORTCUT);@{target=$s.TargetPath;arguments=$s.Arguments;cwd=$s.WorkingDirectory;icon=$s.IconLocation}|ConvertTo-Json'], { READANY_TEST_SHORTCUT: path.join(directory, 'ReadAny.lnk') }))
+      const data = JSON.parse(powershell(['-Command', '[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false);$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:READANY_TEST_SHORTCUT);@{target=$s.TargetPath;arguments=$s.Arguments;cwd=$s.WorkingDirectory;icon=$s.IconLocation}|ConvertTo-Json'], { READANY_TEST_SHORTCUT: path.join(directory, 'OpenRead.lnk') }))
       assert.match(data.target, /WindowsPowerShell\\v1\.0\\powershell\.exe$/i)
       assert.ok(data.arguments.includes(`-File "${path.join(root, 'plus-bridge/launch.ps1')}"`))
       assert.match(data.arguments, /-WindowStyle Hidden/)
       assert.equal(data.cwd, root)
       assert.ok(data.icon.includes('app.exe'))
     }
-    const backup = path.join(state, 'shortcut-backups/desktop-ReadAny.lnk')
+    const backup = path.join(state, 'shortcut-backups/desktop-OpenRead.lnk')
     assert.deepEqual(await readFile(backup), original)
     powershell(args)
     assert.deepEqual(await readFile(backup), original)

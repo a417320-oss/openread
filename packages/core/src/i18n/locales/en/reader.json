@@ -143,5 +143,24 @@
     "pinyin": "Pinyin",
     "zhuyin": "Zhùyīn (ㄅㄆㄇ)",
     "furigana": "Furigana (ふりがな)"
+  },
+  "ocr": {
+    "title": "Recognize PDF text (OCR)",
+    "description": "Recognize scanned pages locally. Results are saved for the AI assistant; the source PDF is unchanged.",
+    "pages": "PDF pages: {{total}}. Use PDF page numbers, not printed page labels.",
+    "from": "First page",
+    "to": "Last page",
+    "language": "Recognition language",
+    "force": "Recognize again, including pages with existing text",
+    "progress": "Page {{page}} · {{completed}} / {{total}} completed",
+    "hint": "The first page may take longer while the local engine loads. For long books, start with a chapter. Check OCR text against the scan, especially names, numbers and tables.",
+    "start": "Start recognition",
+    "cancel": "Cancel",
+    "export": "Export text",
+    "exported": "Text exported.",
+    "invalidRange": "Enter a whole-number page range between 1 and {{total}}.",
+    "complete": "Saved {{recognized}} pages; reused {{reused}} pages; {{empty}} pages had no recognizable text. You can now ask the AI about these pages.",
+    "cancelled": "Cancelled. Completed pages are saved; running this range again will reuse them.",
+    "noText": "No text available in this range. Run recognition first."
   }
 }

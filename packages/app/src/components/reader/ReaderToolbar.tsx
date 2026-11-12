@@ -19,6 +19,7 @@ import {
   Pin,
   RotateCcw,
   Search,
+  ScanText,
   Settings,
   Undo,
   ZoomIn,
@@ -37,6 +38,7 @@ interface ReaderToolbarProps {
   tocItems?: TOCItem[];
   onGoToChapter?: (href: string) => void;
   onToggleSearch?: () => void;
+  onOcr?: () => void;
   onToggleToc?: () => void;
   onToggleSettings?: () => void;
   onToggleChat?: () => void;
@@ -70,6 +72,7 @@ export function ReaderToolbar({
   tocItems: _tocItems = [],
   onGoToChapter: _onGoToChapter,
   onToggleSearch,
+  onOcr,
   onToggleToc,
   onToggleSettings,
   onToggleChat,
@@ -228,6 +231,8 @@ export function ReaderToolbar({
           onToggleTranslationVisible={onToggleTranslationVisible}
           onReset={onChapterTranslationReset}
         />
+        {onOcr && <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onOcr}
+          title={t("ocr.title")} aria-label={t("ocr.title")}><ScanText className="h-3.5 w-3.5" /></Button>}
         <SyncButton iconSize={14} className="h-7 w-7" />
         {isFixedLayout && (
           <div

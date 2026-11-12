@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { IPlatformService } from "../services";
 import { setPlatformService } from "../services";
 import { listPdfPagesFromBookFile, readPdfPageFromBookFile } from "./chapter";
+import { pdfFingerprint } from "./ocr";
+import { saveOcrPage } from "./ocr-cache";
 
 const encoder = new TextEncoder();
 
@@ -127,6 +129,18 @@ async function createPlatform(root: string): Promise<string> {
 }
 
 describe("PDF chapter fallback", () => {
+  it("reads persisted OCR for a scanned page after the platform is reopened", async () => {
+    const root = await mkdtemp(join(tmpdir(), "openread-ocr-page-"));
+    const dir = await createPlatform(root);
+    const bytes = buildSimplePdf([""]);
+    await writeFile(join(dir, "books", "scan.pdf"), bytes);
+    await saveOcrPage({ version: 1, fingerprint: await pdfFingerprint(bytes), page: 1,
+      language: "chi_sim+eng", text: "扫描 PDF 已识别正文", confidence: 95 });
+    await createPlatform(root);
+    await expect(readPdfPageFromBookFile("scan", "books/scan.pdf", "page-1"))
+      .resolves.toMatchObject({ content: "扫描 PDF 已识别正文", cfi: "page:1", page: 1 });
+  });
+
   beforeEach(() => {
     setPlatformService(null as unknown as IPlatformService);
   });

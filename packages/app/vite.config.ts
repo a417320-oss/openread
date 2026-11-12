@@ -19,7 +19,7 @@ export default defineConfig(async () => ({
       "pdfjs-dist/build/pdf.worker.mjs": path.join(pdfjsDist, "build/pdf.worker.mjs"),
       "pdfjs-dist": pdfjsDist,
       // Map @pdfjs/* to foliate-js vendored pdfjs (v4.7, compatible with foliate-js)
-      "@pdfjs": path.resolve(__dirname, "../../foliate-js/vendor/pdfjs"),
+      "@pdfjs": path.resolve(__dirname, "../foliate-js/vendor/pdfjs"),
     },
     dedupe: ["i18next", "react-i18next", "react", "react-dom"],
   },

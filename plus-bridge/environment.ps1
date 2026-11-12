@@ -1,5 +1,7 @@
 function Get-ReadAnyNode {
     param([Parameter(Mandatory=$true)][string]$ProjectRoot)
+    $bundledNode=Join-Path $ProjectRoot 'runtime\node.exe'
+    if (Test-Path -LiteralPath $bundledNode -PathType Leaf) { return $bundledNode }
     $recordPath=Join-Path $ProjectRoot '.cache\plus\runtime.json'
     if (Test-Path -LiteralPath $recordPath) {
         $record=Get-Content -LiteralPath $recordPath -Raw | ConvertFrom-Json

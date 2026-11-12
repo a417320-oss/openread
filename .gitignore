@@ -2,6 +2,12 @@
 node_modules/
 .cache/
 runtime/
+.cache-tools/
+packages/app/public/vendor/ocr/
+packages/app/public/vendor/pdfjs-local/
+packages/app/ocr-smoke.html
+packages/app/ocr-smoke.tsx
+packages/app/public/ocr-fixture.pdf
 .pnpm-store/
 
 # Build
@@ -36,6 +42,9 @@ tauri-signing-key.key.pub
 
 # Logs
 *.log
+*.dpapi
+*.traineddata
+pdf-ocr/
 npm-debug.log*
 pnpm-debug.log*
 

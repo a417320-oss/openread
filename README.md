@@ -1,383 +1,67 @@
-<p align="center">
-  <img src="packages/app/public/logo.svg" alt="ReadAny Logo" width="120" height="120">
-</p>
+# OpenRead
 
-<h1 align="center">ReadAny</h1>
+[English](#english) · [PDF OCR 使用说明](docs/pdf-ocr.md) · [下载](https://github.com/a417320-oss/openread/releases)
 
-<p align="center">
-  <strong>Local-first AI e-book reader for desktop and mobile</strong>
-</p>
+支持本地 PDF 图片文字识别的开源 AI 阅读器，基于 [ReadAny](https://github.com/codedogQBY/ReadAny) v1.3.6 改进，采用 **GPL-3.0-or-later**。
 
-<p align="center">
-  <em>"Why do I forget what I read? Why are my notes scattered? Why can I only search by keywords?"</em>
-</p>
+## 新增与保留
 
-<p align="center">
-  ReadAny helps you ask questions about books, find ideas by meaning, and build a private reading knowledge base with RAG chat, semantic search, highlights, TTS, and WebDAV sync.
-</p>
+- **离线 PDF OCR**：简体中文、繁体中文、英文；选择页码范围，显示进度，支持取消、逐页保存和再次打开后复用。
+- **识别后供 AI 阅读**：扫描页文字可用于章节提取、PDF 页读取和重新建立向量索引，也可导出 TXT。
+- **稳定的桌面启动**：保留 Plus 连接服务、模型选择恢复、系统代理适配和安全关闭修复。
+- **保留原有阅读能力**：书库、批注、笔记、EPUB/PDF 阅读、AI 对话及同步等。
 
-<p align="center">
-  <a href="https://github.com/codedogQBY/ReadAny/releases/latest">
-    <img src="https://img.shields.io/github/v/release/codedogQBY/ReadAny?color=blue&label=Download" alt="Release">
-  </a>
-  <a href="https://github.com/codedogQBY/ReadAny/stargazers">
-    <img src="https://img.shields.io/github/stars/codedogQBY/ReadAny?color=yellow" alt="Stars">
-  </a>
-  <a href="https://github.com/codedogQBY/ReadAny/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/codedogQBY/ReadAny?color=green" alt="License">
-  </a>
-  <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20iOS%20%7C%20Android-blue" alt="Platform">
-  <a href="README_CN.md">
-    <img src="https://img.shields.io/badge/lang-中文-red" alt="Chinese">
-  </a>
-</p>
+OCR 在本机执行，不上传 PDF，不需要 API 密钥。原 PDF 不变；本版本不向 PDF 写入透明文字层。
+使用 AI 对话时，所选 AI 服务仍会接收发送给它的文字。OCR 对模糊扫描、复杂表格和手写的识别可能有误。
 
----
+## Windows 使用
 
-> 🚀 **v2.0 Update**: Mobile apps (iOS/Android) now available! See [Mobile](#mobile-apps) section below.
+在 Releases 下载 `OpenRead-1.4.0-windows-x64.zip`，解压到固定目录，运行 `Setup-OpenRead.cmd` 创建桌面入口，之后双击 **OpenRead**。
+需要 Windows 10/11 和 WebView2。便携包包含启动所需的 Node.js。
 
-## AI-Native Reading Workflow
+打开 PDF → 顶部“识别 PDF 图片文字” → 输入 PDF 页码范围 → 开始识别。识别完成后可让 AI 总结这些页。
 
-- **Chat with your library** - Ask questions about the current book or selected passages, with answers grounded in your reading context
-- **Find ideas semantically** - Hybrid vector retrieval + BM25 search helps you find concepts even when the exact keyword is missing
-- **Keep knowledge private** - Local embeddings and a local vector store keep your books, highlights, and notes offline-capable
-- **Use your preferred model** - Connect OpenAI, Claude, Gemini, Ollama, DeepSeek, or custom-compatible providers
+ChatGPT 订阅连接是可选功能。运行启动器后，在浏览器打开 `http://127.0.0.1:38618/`，通过官方登录授权，随后重新运行 OpenRead 启动器。是否可用以及使用额度取决于账号权限和服务端支持。也可在设置中配置自己的 API 服务。
 
-## Why ReadAny?
+升级已有 ReadAny 时，应用继续使用原资料库标识，保留书籍、笔记和模型配置。请先退出旧应用。OpenRead 使用独立发布页手动更新，避免被上游版本覆盖。
 
-| Problem | Traditional Readers | ReadAny |
-|---------|---------------------|---------|
-| Search content | Keywords only | **Semantic search** that understands your intent |
-| Ask questions | Find answers yourself | **AI answers directly + locates sources** |
-| Take notes | Manual copy-paste | **Select to highlight**, one-click export |
-| Knowledge management | Scattered notes | **Unified management**, multi-format export |
-| Privacy | Upload to cloud | **Local vector store**, fully offline capable |
+## 从源码构建
 
-### Comparison with Alternatives
+需要 Node.js 24+、pnpm 9.15.0，以及 [Tauri 系统依赖](https://v2.tauri.app/start/prerequisites/)（Rust；Windows 还需 MSVC Build Tools）。
 
-| Feature | ReadAny | Calibre | KOReader | Apple Books |
-|---------|---------|---------|----------|-------------|
-| AI Chat | ✅ | ❌ | ❌ | ❌ |
-| Semantic Search (RAG) | ✅ | ❌ | ❌ | ❌ |
-| Local Vector Store | ✅ | - | - | ❌ |
-| TTS (Text-to-Speech) | ✅ | ❌ | Limited | Limited |
-| Reading Stats | ✅ | ❌ | ❌ | Limited |
-| WebDAV Sync | ✅ | ❌ | ❌ | ❌ |
-| Skills System | ✅ | ❌ | ❌ | ❌ |
-| Format Support | 10+ | 15+ | 10+ | 2 |
-| Note Export | 5 formats | Limited | Limited | Limited |
-| Open Source | ✅ | ✅ | ✅ | ❌ |
-
----
-
-## Screenshots
-
-### Hero
-
-<div align="center">
-  <img src="assets/hero-screenshot.png" width="80%" alt="ReadAny Hero">
-</div>
-
-### AI-Powered Chat
-
-<div align="center">
-  <img src="assets/ai-chat-desktop.png" width="60%" alt="AI Chat - Desktop">
-  <img src="assets/ai-chat-mobile.png" width="20%" alt="AI Chat - Mobile">
-</div>
-
-### Notes & Highlights
-
-<div align="center">
-  <img src="assets/notes-desktop.png" width="60%" alt="Notes - Desktop">
-  <img src="assets/notes-mobile.png" width="20%" alt="Notes - Mobile">
-</div>
-
-### Text-to-Speech
-
-<div align="center">
-  <img src="assets/tts-desktop.png" width="60%" alt="TTS - Desktop">
-  <img src="assets/tts-mobile.png" width="20%" alt="TTS - Mobile">
-</div>
-
-### Reading Statistics
-
-<div align="center">
-  <img src="assets/stats-desktop.png" width="60%" alt="Stats - Desktop">
-  <img src="assets/stats-mobile.png" width="20%" alt="Stats - Mobile">
-</div>
-
-### Cross-Device Sync
-
-<div align="center">
-  <img src="assets/sync-desktop.png" width="60%" alt="Sync - Desktop">
-  <img src="assets/sync-mobile.png" width="20%" alt="Sync - Mobile">
-</div>
-
----
-
-## Core Features
-
-### 🤖 AI-Powered Reading
-
-- **Intelligent Chat** - Ask questions about your books, AI knows your position, selected text, and highlights
-- **Semantic Search** - Beyond keywords, vector retrieval + BM25 hybrid search
-- **Instant Translation** - AI translation or DeepL, 19 languages supported
-- **Multiple AI Providers** - OpenAI, Claude, Gemini, Ollama, DeepSeek
-- **Skills System** - Built-in skills (summarizer, concept explainer, character tracker, etc.) + create custom skills
-
-### 📝 Annotation & Knowledge Management
-
-- **5-Color Highlights** - Yellow/Green/Blue/Pink/Purple, hover to preview notes
-- **Markdown Notes** - Rich text editor with toolbar, WYSIWYG
-- **Multi-format Export** - Markdown, HTML, JSON, Obsidian, Notion
-
-### 🔊 Text-to-Speech (TTS)
-
-- **Multiple Engines** - Edge TTS, Browser TTS, DashScope (通义千问)
-- **Voice Selection** - 100+ voices in multiple languages
-- **Speed Control** - Adjustable playback speed
-- **Background Playback** - Listen while doing other things
-
-### 📊 Reading Statistics
-
-- **Reading Heatmap** - Visualize your reading habits like GitHub contributions
-- **Trend Charts** - Track daily/weekly/monthly reading time
-- **Streak Tracking** - Longest consecutive reading days
-- **Book Statistics** - Time spent per book, completion rate
-
-### ☁️ Cross-Device Sync
-
-- **WebDAV Support** - Sync your library, highlights, and notes across devices
-- **Auto Sync** - Automatic background synchronization
-- **Conflict Resolution** - Smart merge for concurrent edits
-
-### 📚 Multi-Format Support
-
-**EPUB** · **PDF** · **MOBI** · **AZW** · **AZW3** · **FB2** · **FBZ** · **CBZ** · **TXT** · **UMD**
-
-TXT and UMD are imported by converting them to EPUB for reading, notes, search, and sync.
-
-### 🎨 Customizable Experience
-
-- 5 font themes (CJK optimized)
-- Light/Dark mode
-- Paginated/Continuous scroll
-- Keyboard shortcuts
-- English/Chinese interface
-
----
-
-## Quick Start
-
-### Download
-
-| Platform | Download |
-|----------|----------|
-| macOS (Apple Silicon) | [Download .dmg](https://github.com/codedogQBY/ReadAny/releases/latest) |
-| macOS (Intel) | [Download .dmg](https://github.com/codedogQBY/ReadAny/releases/latest) |
-| Windows | [Download .msi](https://github.com/codedogQBY/ReadAny/releases/latest) |
-| Linux | [Download .AppImage](https://github.com/codedogQBY/ReadAny/releases/latest) |
-| iOS | [Join TestFlight](https://testflight.apple.com/join/qNdvNv2p) |
-| Android | [Download .apk](https://github.com/codedogQBY/ReadAny/releases/latest) |
-
-#### Homebrew (macOS)
-
-```bash
-brew tap codedogQBY/readany
-brew install --cask readany
+```sh
+corepack enable
+corepack prepare pnpm@9.15.0 --activate
+pnpm --filter app... --filter @readany/cli... install --frozen-lockfile
+npm ci --prefix plus-bridge
+pnpm test
+pnpm test:ocr
+node --test plus-bridge/bridge.test.mjs plus-bridge/desktop.test.mjs deployment/openread.test.mjs
+pnpm --filter app build
+node scripts/ocr-smoke.mjs
+pnpm --filter app tauri build --bundles nsis
 ```
 
-### 3 Steps to Get Started
+构建会从锁定版本的 npm 依赖中复制 OCR 引擎和语言包，运行时不依赖 CDN。首次安装依赖需要联网。
+Windows GitHub Actions 会运行测试、编译应用并生成包含 Plus 启动器的便携 ZIP。
+普通 Tauri 安装包不包含 Node.js 连接服务；需要 Plus 启动修复时请使用便携包。
 
-1. **Import Books** - Drag and drop files into library
-2. **Start Reading** - Double-click to open, immersive experience
-3. **Configure AI** (Optional) - Settings → AI → Enter API Key
+`com.readany.app`、`@readany/*`、CLI 的 `readany` 命令以及原数据库命名有意保留，以兼容已有数据和集成。
+`deployment/verify.test.mjs` 是原机器部署验证，不属于干净环境下的通用测试。
 
-### Mobile Apps
+## 开源与致谢
 
-ReadAny is now available on mobile devices!
+感谢 codedogQBY、ReadAny Team、Foliate、PDF.js、Tesseract.js 及所有贡献者。
+保留上游 Git 历史、版权和 GPL 许可证；修改说明见 [NOTICE.md](NOTICE.md)。
+本项目独立维护，不是 ReadAny 官方版本，也不是 OpenAI 官方产品。
+原项目文档见 [docs/upstream](docs/upstream)。
 
-**Expo (React Native) Version:**
-```bash
-# Clone and setup
-git clone https://github.com/codedogQBY/ReadAny.git
-cd ReadAny
-pnpm install
+账号令牌、书籍、OCR 结果、运行日志和个人设置不包含在源码或发布包中。
 
-# Install/run the development build on iOS
-pnpm expo:ios
+## English
 
-# Install/run the development build on iOS Simulator
-pnpm expo:ios:simulator
+OpenRead is an independent GPL-3.0-or-later fork of ReadAny v1.3.6. It adds offline OCR for scanned PDFs (Simplified Chinese, Traditional Chinese and English), page-range jobs with cancellation and persistent results, AI/CLI access to recognized text, and a Windows launcher that preserves the existing ChatGPT subscription connection and model selection fixes.
 
-# Install/run the development build on Android
-# Start an Android emulator first, or connect a device.
-pnpm expo:android
+Download the portable Windows ZIP from Releases, extract it to a permanent directory, and run `Setup-OpenRead.cmd`. In the PDF reader, select **Recognize PDF text (OCR)**. The original PDF remains unchanged. Recognition results can be exported as text; this version does not insert a searchable text layer into the PDF.
 
-# Start Metro for the installed development build
-pnpm expo:start
-```
-
-Mobile development uses an Expo development build with `expo-dev-client`, not
-Expo Go. Expo Go cannot load ReadAny's native modules and app configuration. Use
-`pnpm expo:ios`, `pnpm expo:ios:simulator`, or `pnpm expo:android` the first
-time, or whenever native dependencies/configuration change, then use
-`pnpm expo:start` for daily JS debugging in the installed ReadAny development
-app.
-
-For simulators, use `pnpm expo:ios:simulator` on iOS. For Android, start an
-Android emulator first, then run `pnpm expo:android`.
-
-Mobile app source lives in [`packages/app-expo`](packages/app-expo).
-
-### AI Configuration
-
-| Provider | Get API Key |
-|----------|-------------|
-| OpenAI | [platform.openai.com](https://platform.openai.com/) |
-| Anthropic Claude | [console.anthropic.com](https://console.anthropic.com/) |
-| Google Gemini | [aistudio.google.com](https://aistudio.google.com/) |
-| Ollama / DeepSeek | Local or custom endpoint |
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Desktop | [Tauri 2](https://tauri.app/) (Rust) |
-| Mobile | [Expo](https://expo.dev/) (React Native) + Tauri Mobile |
-| Frontend | [React 19](https://react.dev/) + TypeScript |
-| Build | [Vite 7](https://vite.dev/) |
-| Styling | [Tailwind CSS 4](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/) |
-| State | [Zustand](https://zustand.docs.pmnd.rs/) |
-| Database | SQLite |
-| E-Book | [foliate-js](https://github.com/johnfactotum/foliate-js) |
-| AI/LLM | [LangChain.js](https://js.langchain.com/) + [LangGraph](https://langchain-ai.github.io/langgraphjs/) |
-| Embeddings | [Transformers.js](https://huggingface.co/docs/transformers.js) |
-
----
-
-## Development
-
-```bash
-# Clone
-git clone https://github.com/codedogQBY/ReadAny.git
-cd ReadAny
-
-# Install
-pnpm install
-
-# Dev (Desktop)
-pnpm tauri dev
-
-# Dev (Mobile - Expo development build, not Expo Go)
-# First install/run the native development build:
-pnpm expo:ios
-pnpm expo:ios:simulator
-pnpm expo:android
-
-# Then start Metro for the installed development app:
-pnpm expo:start
-
-# Build
-pnpm tauri build
-```
-
-Mobile development uses `expo-dev-client`, so Expo Go is not supported. Re-run
-`pnpm expo:ios`, `pnpm expo:ios:simulator`, or `pnpm expo:android` after
-changing native dependencies, `app.config.js`, permissions, schemes, or build
-plugins.
-
-**Requirements:** Node.js ≥18, pnpm ≥9, Rust (for Tauri), plus Xcode for iOS or
-Android Studio/SDK for Android mobile development.
-
----
-
-## Roadmap
-
-- [x] **Mobile apps** — iOS and Android versions available
-- [x] **TTS (Text-to-Speech)** — Edge TTS, multiple voices
-- [x] **Reading Statistics** — Heatmap, trends, streaks
-- [x] **Skills System** — Built-in + custom AI skills
-- [x] **WebDAV Sync** — Cross-device synchronization
-- [ ] More AI models (Qwen, GLM, Llama)
-- [ ] PDF reflow/re-render
-- [ ] Plugin system
-- [ ] Cloud sync (official service)
-
----
-
-## Contributing
-
-Contributions welcome! Bug reports, feature requests, pull requests all appreciated.
-
-1. Fork → 2. Branch → 3. PR
-
-Please run `pnpm lint` before submitting to ensure code style consistency.
-
----
-
-## License
-
-[GPL-3.0](LICENSE) © 2024 ReadAny Team
-
-This project is open source under the GNU General Public License v3.0. You are free to use, modify, and distribute the code, but any derivative works must also be open source under the same license.
-
-**Note:** While the source code is freely available, the official app store versions may be offered for a fee to support ongoing development and cover certificate costs. You can always build the app yourself at no cost.
-
----
-
-## Acknowledgments
-
-- [foliate-js](https://github.com/johnfactotum/foliate-js) - E-book rendering engine
-- [Tauri](https://tauri.app/) - Cross-platform desktop framework
-- [Expo](https://expo.dev/) - React Native development platform
-- [LangChain.js](https://js.langchain.com/) - AI orchestration framework
-- [Radix UI](https://www.radix-ui.com/) - Accessible UI components
-- [Lucide](https://lucide.dev/) - Icon library
-
----
-
-## Community
-
-Thanks to [linux.do](https://linux.do/) — a vibrant Chinese tech community where you can learn about AI, development, and more.
-
----
-
-<p align="center">
-  Made with ❤️ by the ReadAny Team
-</p>
-
-<p align="center">
-  <a href="https://github.com/codedogQBY/ReadAny/discussions">💬 Discussions</a> •
-  <a href="https://github.com/codedogQBY/ReadAny/issues">🐛 Issues</a>
-</p>
-
-<p align="center">
-  <img src="assets/小红书群.jpg" width="200" alt="小红书群">
-  <img src="assets/微信群.jpg" width="200" alt="微信群">
-</p>
-
-## ☕ Support the Project
-
-If you find ReadAny helpful, consider buying me a coffee to support ongoing development!
-
-<p align="center">
-  <img src="assets/微信赞赏码.jpg" width="200" alt="微信赞赏码">
-  <img src="assets/支付宝收款码.jpg" width="200" alt="支付宝收款码">
-</p>
-
-<p align="center">
-  <a href="https://ifdian.net/a/codedogQBY">Dining Table on Afdian</a>
-</p>
-
----
-
-## Star History
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=codedogQBY/ReadAny&type=Date&theme=dark" />
-  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=codedogQBY/ReadAny&type=Date" />
-  <img alt="Star History Chart" src="https://api.star-history.com/image?repos=codedogQBY/ReadAny&type=Date" />
-</picture>
+Build commands above use Node.js 24+, pnpm 9.15.0 and Tauri's native prerequisites. Internal ReadAny identifiers are intentionally retained for data compatibility. See LICENSE and NOTICE.md for attribution.
