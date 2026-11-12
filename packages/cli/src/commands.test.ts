@@ -6,6 +6,7 @@ import {
   mkdir,
   readFile,
   readlink,
+  rm,
   symlink,
   truncate,
   writeFile,
@@ -2961,6 +2962,7 @@ describe("commands", () => {
     const auditLogDir = join(workspace.dataRoot, "logs", "cli");
     await mkdir(auditLogDir, { recursive: true });
     const auditPath = getAuditLogFilePath(auditLogDir, "2026-07-06T00:00:00.000Z");
+    try {
     await writeFile(auditPath, "", "utf8");
     await truncate(auditPath, 3 * 1024 * 1024 * 1024);
     await appendFile(
@@ -2992,7 +2994,10 @@ describe("commands", () => {
         ],
       },
     });
-  });
+    } finally {
+      await rm(auditPath, { force: true });
+    }
+  }, 60000); // Windows CI may allocate the 3 GiB fixture instead of making a sparse file.
 
   it("does not fail when audit logs are unavailable", async () => {
     const workspace = await createWorkspace();
