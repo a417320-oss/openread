@@ -54,6 +54,27 @@ test('desktop startup resolves its pinned Node runtime even when PATH has no nod
   } finally { await rm(fixture, { recursive: true, force: true }) }
 })
 
+test('OpenRead migrates its own legacy shortcut but preserves another installation', { skip: process.platform !== 'win32' }, async () => {
+  const fixture = await mkdtemp(path.join(root, '.cache/shortcut-migration-test-'))
+  const desktop = path.join(fixture, 'Desktop'), programs = path.join(fixture, 'Programs')
+  await mkdir(desktop); await mkdir(programs)
+  const executable = path.join(fixture, 'app.exe')
+  await writeFile(executable, 'test executable placeholder')
+  const owned = path.join(desktop, 'ReadAny.lnk'), unrelated = path.join(programs, 'ReadAny.lnk')
+  try {
+    for (const [file, target] of [[owned, executable], [unrelated, path.join(fixture, 'other.exe')]]) {
+      powershell(['-Command', '$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:READANY_TEST_SHORTCUT);$s.TargetPath=$env:READANY_TEST_EXE;$s.Save()'], { READANY_TEST_SHORTCUT: file, READANY_TEST_EXE: target })
+    }
+    const before = await readFile(owned), other = await readFile(unrelated)
+    const state = path.join(fixture, 'State')
+    powershell(['-File', path.join(root, 'plus-bridge/install-shortcuts.ps1'), '-DesktopDirectory', desktop, '-ProgramsDirectory', programs, '-StateDirectory', state, '-ExecutablePath', executable])
+    await assert.rejects(readFile(owned), { code: 'ENOENT' })
+    assert.deepEqual(await readFile(path.join(state, 'shortcut-backups/desktop-ReadAny.lnk')), before)
+    assert.deepEqual(await readFile(unrelated), other)
+    assert.ok((await readFile(path.join(desktop, 'OpenRead.lnk'))).length)
+  } finally { await rm(fixture, { recursive: true, force: true }) }
+})
+
 test('desktop startup uses the Windows proxy without overriding explicit proxy settings or proxying loopback', { skip: process.platform !== 'win32' }, () => {
   const output = powershell(['-Command', '. $env:READANY_TEST_HELPER;$env:HTTP_PROXY=$null;$env:HTTPS_PROXY=$null;$env:ALL_PROXY=$null;$env:NO_PROXY="example.test";Initialize-ReadAnyProxy -ProxyResolver {[uri]"http://127.0.0.1:17897"};if($env:HTTPS_PROXY -ne "http://127.0.0.1:17897"){throw "Missing Windows proxy"};foreach($h in @("localhost","127.0.0.1","::1","example.test")){if(($env:NO_PROXY -split ",") -notcontains $h){throw "Missing local bypass"}};$env:HTTPS_PROXY="http://127.0.0.1:17898";Initialize-ReadAnyProxy -ProxyResolver {throw "Explicit proxy was overridden"};if($env:HTTPS_PROXY -ne "http://127.0.0.1:17898"){throw "Proxy changed"};Write-Output "Proxy checks passed"'], { READANY_TEST_HELPER: path.join(root, 'plus-bridge/environment.ps1') })
   assert.equal(output, 'Proxy checks passed')

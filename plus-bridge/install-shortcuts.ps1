@@ -37,5 +37,16 @@ foreach ($location in @(@{name='desktop';directory=$DesktopDirectory},@{name='st
     $shortcut.Description='OpenRead with automatic ChatGPT subscription connection'
     $shortcut.WindowStyle=7
     $shortcut.Save()
+    # Migrate only this installation's old shortcut; leave other ReadAny installs alone.
+    $legacyPath=Join-Path $location.directory 'ReadAny.lnk'
+    if (Test-Path -LiteralPath $legacyPath) {
+        $legacy=$shortcutShell.CreateShortcut($legacyPath)
+        $owned=($legacy.TargetPath -eq $executable) -or (($legacy.TargetPath -eq $powerShellPath) -and $legacy.Arguments.Contains($launcherPath))
+        if ($owned) {
+            $legacyBackup=Join-Path $backupDirectory ($location.name + '-ReadAny.lnk')
+            if (!(Test-Path -LiteralPath $legacyBackup)) { Copy-Item -LiteralPath $legacyPath -Destination $legacyBackup }
+            Remove-Item -LiteralPath $legacyPath
+        }
+    }
     Write-Output "Updated OpenRead shortcut: $shortcutPath"
 }
