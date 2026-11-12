@@ -14,14 +14,9 @@ foreach ($dependency in @('better-sqlite3','bindings','file-uri-to-path')) {
 }
 $nodePath=(Get-Command node.exe -CommandType Application).Source
 Copy-Item -LiteralPath $nodePath -Destination (Join-Path $destination 'runtime\node.exe')
-$nodeLicense=Join-Path (Split-Path $nodePath -Parent) 'LICENSE'
 $licenseOutput=Join-Path $destination 'runtime\NODE-LICENSE.txt'
-if (Test-Path -LiteralPath $nodeLicense) {
-    Copy-Item -LiteralPath $nodeLicense -Destination $licenseOutput
-} else {
-    $nodeVersion=(& $nodePath --version).Trim()
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/nodejs/node/$nodeVersion/LICENSE" -OutFile $licenseOutput
-}
+$nodeVersion=(& $nodePath --version).Trim()
+Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/nodejs/node/$nodeVersion/LICENSE" -OutFile $licenseOutput
 # Explicit allowlist. No .cache, credentials, personal settings, books, or OCR cache.
 Get-ChildItem -LiteralPath (Join-Path $projectRoot 'plus-bridge') -File | Where-Object { $_.Extension -in '.mjs','.ps1','.json' -and $_.Name -notlike '*.test.mjs' } | ForEach-Object {
     Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $destination 'plus-bridge')

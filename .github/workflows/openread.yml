@@ -37,6 +37,7 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: packages/app/src-tauri -> target
+          cache-on-failure: true
       - name: Install dependencies
         run: |
           pnpm --filter app... --filter @readany/cli... install --frozen-lockfile
@@ -56,6 +57,7 @@ jobs:
       - name: Create portable package
         run: powershell -NoProfile -ExecutionPolicy Bypass -File deployment/package-openread.ps1
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: OpenRead-windows-x64
           path: |
