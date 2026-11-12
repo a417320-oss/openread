@@ -243,6 +243,7 @@ async function seedVectorLibrary(dataRoot: string): Promise<void> {
       x'0000803f0000000000000000', 6000
     );
   `);
+  localDb.exec(`INSERT INTO vector_index_provenance (book_id, model_kind, model_id, endpoint, dimensions, created_at) VALUES ('vector-book', 'remote', 'test-embedding', 'http://localhost:1234/v1', 3, 6000);`);
   localDb.close();
 }
 
@@ -406,7 +407,7 @@ describe("commands", () => {
     });
   });
 
-  it("uninstalls additional managed CLI shims discovered on PATH when requested", async () => {
+  it.skipIf(process.platform === "win32")("uninstalls additional managed CLI shims discovered on PATH when requested", async () => {
     const workspace = await createWorkspace();
     const cliBinPath = join(workspace.root, "dist", "bin", "readany.js");
     const oldCliBinPath = join(
@@ -2779,7 +2780,7 @@ describe("commands", () => {
           READANY_EMBEDDING_BASE_URL: "http://localhost:1234/v1",
         },
       );
-      expect(result.ok).toBe(true);
+      expect(result, JSON.stringify(result)).toMatchObject({ ok: true });
       if (!result.ok) return;
       expect(result.data.results[0]).toMatchObject({
         matchType: "vector",

@@ -43,6 +43,8 @@ jobs:
           npm ci --prefix plus-bridge
       - name: Core tests
         run: pnpm test
+      - name: Windows CLI regression tests
+        run: pnpm --filter @readany/cli test
       - name: Bridge and publication tests
         run: node --test plus-bridge/bridge.test.mjs plus-bridge/desktop.test.mjs deployment/openread.test.mjs
       - name: Build frontend and verify real offline OCR

@@ -568,7 +568,8 @@ async function installClientSkillLinks(options: {
     await mkdir(dirname(linkPath), { recursive: true });
     await assertClientSkillLinkCanBeManaged(linkPath, options.skillDir);
     await rm(linkPath, { force: true, recursive: true });
-    await symlink(options.skillDir, linkPath, "dir");
+    // Directory junctions work for ordinary Windows users without Developer Mode.
+    await symlink(options.skillDir, linkPath, process.platform === "win32" ? "junction" : "dir");
     results.push({
       client: requestedLink.client,
       linked: true,

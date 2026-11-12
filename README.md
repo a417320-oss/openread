@@ -36,6 +36,7 @@ pnpm --filter app... --filter @readany/cli... install --frozen-lockfile
 npm ci --prefix plus-bridge
 pnpm test
 pnpm test:ocr
+pnpm --filter @readany/cli test
 node --test plus-bridge/bridge.test.mjs plus-bridge/desktop.test.mjs deployment/openread.test.mjs
 pnpm --filter app build
 node scripts/ocr-smoke.mjs

@@ -2,7 +2,8 @@ import { realpathSync } from "node:fs";
 import { lstat, mkdir, readFile, readlink, symlink, writeFile } from "node:fs/promises";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import { installCli, isManagedShim, resolveShimPath, uninstallCli } from "./install.js";
 import { resolveExecutablePath } from "./paths.js";
@@ -16,13 +17,13 @@ describe("cli install", () => {
         platformName: "darwin",
       }),
     ).toEqual({
-      path: "/tmp/bin/readany",
+      path: join("/tmp/bin", "readany"),
       mode: "user",
       platformName: "darwin",
     });
   });
 
-  it("resolves the real CLI target when argv[1] is a managed symlink", async () => {
+  it.skipIf(process.platform === "win32")("resolves the real CLI target when argv[1] is a managed symlink", async () => {
     const root = await mkdtemp(join(tmpdir(), "readany-cli-paths-symlink-"));
     const binPath = join(root, "dist", "bin", "readany.js");
     const shimPath = join(root, "bin", "readany");
@@ -39,13 +40,13 @@ describe("cli install", () => {
       {},
       {
         argv1: "/tmp/vitest/dist/workers/forks.js",
-        moduleUrl: "file:///repo/packages/cli/dist/chunks/chunk-ABC123.js",
+        moduleUrl: pathToFileURL(resolve("/repo/packages/cli/dist/chunks/chunk-ABC123.js")).href,
       },
     );
-    expect(resolved).toBe("/repo/packages/cli/dist/bin/readany.js");
+    expect(resolved).toBe(resolve("/repo/packages/cli/dist/bin/readany.js"));
   });
 
-  it("installs and uninstalls a unix symlink", async () => {
+  it.skipIf(process.platform === "win32")("installs and uninstalls a unix symlink", async () => {
     const root = await mkdtemp(join(tmpdir(), "readany-cli-install-"));
     const binPath = join(root, "dist", "bin", "readany.js");
     const userBinDir = join(root, "bin");
@@ -107,7 +108,7 @@ describe("cli install", () => {
     });
   });
 
-  it("replaces a unix symlink to another ReadAny CLI build", async () => {
+  it.skipIf(process.platform === "win32")("replaces a unix symlink to another ReadAny CLI build", async () => {
     const root = await mkdtemp(join(tmpdir(), "readany-cli-old-managed-symlink-"));
     const binPath = join(root, "current", "dist", "bin", "readany.js");
     const oldBinPath = join(root, "old", "dist", "bin", "readany.js");
@@ -134,7 +135,7 @@ describe("cli install", () => {
     expect(await readlink(shimPath)).toBe(binPath);
   });
 
-  it("removes a unix symlink to another ReadAny CLI build", async () => {
+  it.skipIf(process.platform === "win32")("removes a unix symlink to another ReadAny CLI build", async () => {
     const root = await mkdtemp(join(tmpdir(), "readany-cli-old-managed-uninstall-"));
     const binPath = join(root, "current", "dist", "bin", "readany.js");
     const oldBinPath = join(root, "old", "dist", "bin", "readany.js");
@@ -190,7 +191,7 @@ describe("cli install", () => {
     await expect(lstat(shimPath)).rejects.toThrow();
   });
 
-  it("removes additional managed CLI shims from PATH only when requested", async () => {
+  it.skipIf(process.platform === "win32")("removes additional managed CLI shims from PATH only when requested", async () => {
     const root = await mkdtemp(join(tmpdir(), "readany-cli-extra-path-shim-"));
     const binPath = join(root, "current", "dist", "bin", "readany.js");
     const oldBinPath = join(root, "global", "lib", "node_modules", "@readany", "cli", "dist", "bin", "readany.js");
@@ -264,7 +265,7 @@ describe("cli install", () => {
     expect(await readFile(unmanaged, "utf8")).toContain("user command");
   });
 
-  it("does not overwrite or remove symlinks to a different target", async () => {
+  it.skipIf(process.platform === "win32")("does not overwrite or remove symlinks to a different target", async () => {
     const root = await mkdtemp(join(tmpdir(), "readany-cli-other-symlink-"));
     const binPath = join(root, "dist", "bin", "readany.js");
     const otherTarget = join(root, "other", "readany.js");
