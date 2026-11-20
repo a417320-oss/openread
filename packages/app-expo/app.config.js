@@ -5,7 +5,7 @@ const variant = getAppVariantConfig();
 module.exports = {
   expo: {
     name: variant.name,
-    slug: "readany",
+    slug: variant.key === "openread" ? "openread" : "readany",
     version: "1.4.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
@@ -23,9 +23,9 @@ module.exports = {
       infoPlist: {
         UIBackgroundModes: ["audio"],
         NSCameraUsageDescription:
-          "ReadAny uses the camera to scan sync and configuration QR codes.",
+          `${variant.name} uses the camera to scan sync and configuration QR codes.`,
         NSLocalNetworkUsageDescription:
-          "ReadAny uses the local network to connect to sync devices and the development server while debugging.",
+          `${variant.name} uses the local network to connect to sync devices and the development server while debugging.`,
         ITSAppUsesNonExemptEncryption: false,
       },
     },
@@ -72,7 +72,7 @@ module.exports = {
       [
         "expo-image-picker",
         {
-          photosPermission: "ReadAny uses your photo library to choose custom book covers.",
+          photosPermission: `${variant.name} uses your photo library to choose custom book covers.`,
         },
       ],
       "expo-secure-store",
@@ -84,16 +84,16 @@ module.exports = {
       [
         "expo-camera",
         {
-          cameraPermission: "Allow ReadAny to use your camera to scan sync QR codes.",
+          cameraPermission: `Allow ${variant.name} to use your camera to scan sync QR codes.`,
         },
       ],
     ],
     scheme: variant.scheme,
     extra: {
       appVariant: variant.key,
-      eas: {
-        projectId: "e9c65825-d965-4d58-a3af-46406ee8a9ae",
-      },
+      ...(variant.key !== "openread" && {
+        eas: { projectId: "e9c65825-d965-4d58-a3af-46406ee8a9ae" },
+      }),
     },
   },
 };

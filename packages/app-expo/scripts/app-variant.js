@@ -1,4 +1,11 @@
 const APP_VARIANTS = {
+  openread: {
+    key: "openread",
+    name: "OpenRead",
+    bundleIdentifier: "io.github.a417320oss.openread",
+    androidPackage: "io.github.a417320oss.openread",
+    scheme: "openread",
+  },
   development: {
     key: "development",
     name: "ReadAny Dev",
@@ -23,6 +30,7 @@ const APP_VARIANTS = {
 };
 
 const VARIANT_ALIASES = {
+  openread: "openread",
   dev: "development",
   development: "development",
   local: "development",

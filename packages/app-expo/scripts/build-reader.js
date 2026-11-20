@@ -53,6 +53,7 @@ async function buildReader() {
       target: "es2020",
       minify: true,
       write: false,
+      define: { __READANY_MOBILE_READER__: "true" },
       resolveExtensions: [".js", ".mjs"],
     });
 

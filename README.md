@@ -2,6 +2,12 @@
 
 [English](#english) · [PDF OCR 使用说明](docs/pdf-ocr.md) · [下载](https://github.com/a417320-oss/openread/releases)
 
+### Android 试用包
+
+在 [v1.4.0 发布页](https://github.com/a417320-oss/openread/releases/tag/v1.4.0) 下载 `OpenRead-1.4.0-android-arm64.apk`，在 ARM64 安卓手机上打开安装。此试用包支持手机端阅读功能，Windows 版的离线 PDF OCR 和 ChatGPT 订阅连接暂未移植。iPhone 暂无安装包。
+
+从源码构建时，安装 JDK 17 与 Android SDK 36，然后在仓库根目录执行 `pnpm install --frozen-lockfile`。在 `packages/app-expo` 中设置 `APP_VARIANT=openread`，运行 `pnpm build:reader` 和 `pnpm exec expo prebuild --platform android --no-install`。进入生成的 `android` 目录，执行 `./gradlew :app:assembleRelease -PreactNativeArchitectures=arm64-v8a`（Windows 使用 `gradlew.bat`），并使用自己的 Android 密钥签名。
+
 支持本地 PDF 图片文字识别的开源 AI 阅读器，基于 [ReadAny](https://github.com/codedogQBY/ReadAny) v1.3.6 改进，采用 **GPL-3.0-or-later**。
 
 ## 新增与保留

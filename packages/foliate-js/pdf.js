@@ -8,16 +8,22 @@ import { WorkerMessageHandler } from "pdfjs-dist/build/pdf.worker.mjs";
 
 globalThis.pdfjsWorker ??= { WorkerMessageHandler };
 
-// Configure PDF.js worker — always set to match the API version
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs-local/pdf.worker.mjs';
-const PDFJS_CDN_BASE = '/vendor/pdfjs-local';
+// The mobile reader bundles the worker and uses the upstream PDF.js asset CDN.
+// Desktop serves these assets from the application bundle.
+const isMobileReader = typeof __READANY_MOBILE_READER__ !== 'undefined' && __READANY_MOBILE_READER__;
+const PDFJS_ASSET_BASE = isMobileReader
+  ? `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}`
+  : '/vendor/pdfjs-local';
+pdfjsLib.GlobalWorkerOptions.workerSrc = isMobileReader
+  ? `${PDFJS_ASSET_BASE}/build/pdf.worker.min.mjs`
+  : `${PDFJS_ASSET_BASE}/pdf.worker.mjs`;
 const PDFJS_DOCUMENT_OPTIONS = {
   useWorkerFetch: false,
   isEvalSupported: false,
   useSystemFonts: true,
-  cMapUrl: `${PDFJS_CDN_BASE}/cmaps/`,
+  cMapUrl: `${PDFJS_ASSET_BASE}/cmaps/`,
   cMapPacked: true,
-  standardFontDataUrl: `${PDFJS_CDN_BASE}/standard_fonts/`,
+  standardFontDataUrl: `${PDFJS_ASSET_BASE}/standard_fonts/`,
 };
 
 // Inline text_layer_builder CSS
