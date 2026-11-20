@@ -28,7 +28,11 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
       - name: Install dependencies
+        env:
+          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
         run: pnpm --filter @readany/app-expo... --filter foliate-js... install --frozen-lockfile
       - name: Test Android app configuration and mobile code
         run: |
