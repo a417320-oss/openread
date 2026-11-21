@@ -1,6 +1,7 @@
 import { MarkdownRenderer } from "@/components/chat/MarkdownRenderer";
 import { BookmarkRibbon } from "@/components/reader/BookmarkRibbon";
 import { ChapterTranslationSheet } from "@/components/reader/ChapterTranslationSheet";
+import { PdfOcrSheet } from "@/components/reader/PdfOcrSheet";
 import { ReadingProgressSlider } from "@/components/reader/ReadingProgressSlider";
 import { SelectionPopover } from "@/components/reader/SelectionPopover";
 import { TTSPage } from "@/components/reader/TTSPage";
@@ -228,6 +229,7 @@ export function ReaderScreen({ route, navigation }: Props) {
   const [translationText, setTranslationText] = useState("");
   const [showTTS, setShowTTS] = useState(false);
   const [showChapterTranslation, setShowChapterTranslation] = useState(false);
+  const [showPdfOcr, setShowPdfOcr] = useState(false);
   const [isReimporting, setIsReimporting] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -1747,6 +1749,16 @@ export function ReaderScreen({ route, navigation }: Props) {
             },
           ]}
         >
+          {book?.format === "pdf" && !loading && fontServerUrl && (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("ocr.title")}
+              style={s.floatingToolBtn}
+              onPress={() => setShowPdfOcr(true)}
+            >
+              <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>OCR</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={[
               s.floatingToolBtn,
@@ -2130,6 +2142,16 @@ export function ReaderScreen({ route, navigation }: Props) {
             setShowTranslation(false);
             setTranslationText("");
           }}
+        />
+      )}
+
+      {showPdfOcr && book?.format === "pdf" && fontServerUrl && (
+        <PdfOcrSheet
+          key={book.id}
+          book={book}
+          serverUrl={fontServerUrl}
+          currentPage={currentPage}
+          onClose={() => setShowPdfOcr(false)}
         />
       )}
 

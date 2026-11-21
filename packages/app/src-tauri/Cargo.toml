@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "1.4.0"
+version = "1.4.1"
 description = "OpenRead - AI reader with offline PDF OCR"
 authors = ["you"]
 edition = "2021"

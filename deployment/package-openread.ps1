@@ -1,6 +1,9 @@
-param([string]$Version='1.4.0')
+param([string]$Version)
 $ErrorActionPreference='Stop'
 $projectRoot=Split-Path $PSScriptRoot -Parent
+if (!$Version) {
+    $Version=(Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'packages\app\src-tauri\tauri.conf.json') | ConvertFrom-Json).version
+}
 $destination=Join-Path $projectRoot ".cache\release\OpenRead-$Version-windows-x64"
 if (Test-Path -LiteralPath $destination) { throw 'Package output already exists. Choose a fresh output/version.' }
 New-Item -ItemType Directory -Force (Join-Path $destination 'runtime'),(Join-Path $destination 'plus-bridge\node_modules') | Out-Null

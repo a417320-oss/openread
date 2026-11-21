@@ -4,7 +4,7 @@
 
 ### Android 试用包
 
-在 [v1.4.0 发布页](https://github.com/a417320-oss/openread/releases/tag/v1.4.0) 下载 `OpenRead-1.4.0-android-arm64.apk`，在 ARM64 安卓手机上打开安装。此试用包支持手机端阅读功能，Windows 版的离线 PDF OCR 和 ChatGPT 订阅连接暂未移植。iPhone 暂无安装包。
+在 [最新发布页](https://github.com/a417320-oss/openread/releases/latest) 下载 `OpenRead-1.4.1-android-arm64.apk`，在 ARM64 安卓手机上打开安装。打开 PDF，轻点页面呼出工具栏，选择 **OCR**，识别所选页后点击 **导出 EPUB**，在系统分享菜单中选择保存位置或阅读应用。iPhone 暂无安装包。
 
 从源码构建时，安装 JDK 17 与 Android SDK 36，然后在仓库根目录执行 `pnpm install --frozen-lockfile`。在 `packages/app-expo` 中设置 `APP_VARIANT=openread`，运行 `pnpm build:reader` 和 `pnpm exec expo prebuild --platform android --no-install`。进入生成的 `android` 目录，执行 `./gradlew :app:assembleRelease -PreactNativeArchitectures=arm64-v8a`（Windows 使用 `gradlew.bat`），并使用自己的 Android 密钥签名。
 
@@ -12,8 +12,8 @@
 
 ## 新增与保留
 
-- **离线 PDF OCR**：简体中文、繁体中文、英文；选择页码范围，显示进度，支持取消、逐页保存和再次打开后复用。
-- **识别后供 AI 阅读**：扫描页文字可用于章节提取、PDF 页读取和重新建立向量索引，也可导出 TXT。
+- **双端离线 PDF OCR**：Android 与 Windows 支持简体中文、繁体中文和英文。可指定页码范围、查看进度、取消和复用已保存的结果。
+- **导出 EPUB**：安卓与 Windows 可将识别文字导出为带页码目录的 EPUB。Windows 也保留 TXT 导出，以及 AI 章节提取、PDF 页读取和向量索引。
 - **稳定的桌面启动**：保留 Plus 连接服务、模型选择恢复、系统代理适配和安全关闭修复。
 - **保留原有阅读能力**：书库、批注、笔记、EPUB/PDF 阅读、AI 对话及同步等。
 
@@ -22,10 +22,10 @@ OCR 在本机执行，不上传 PDF，不需要 API 密钥。原 PDF 不变；�
 
 ## Windows 使用
 
-在 Releases 下载 `OpenRead-1.4.0-windows-x64.zip`，解压到固定目录，运行 `Setup-OpenRead.cmd` 创建桌面入口，之后双击 **OpenRead**。
+在 Releases 下载 `OpenRead-1.4.1-windows-x64.zip`，解压到固定目录，运行 `Setup-OpenRead.cmd` 创建桌面入口，之后双击 **OpenRead**。
 需要 Windows 10/11 和 WebView2。便携包包含启动所需的 Node.js。
 
-打开 PDF → 顶部“识别 PDF 图片文字” → 输入 PDF 页码范围 → 开始识别。识别完成后可让 AI 总结这些页。
+打开 PDF → 顶部“识别 PDF 图片文字” → 输入 PDF 页码范围 → 开始识别 → **导出 EPUB**。识别完成后也可让 AI 总结这些页。
 
 ChatGPT 订阅连接是可选功能。运行启动器后，在浏览器打开 `http://127.0.0.1:38618/`，通过官方登录授权，随后重新运行 OpenRead 启动器。是否可用以及使用额度取决于账号权限和服务端支持。也可在设置中配置自己的 API 服务。
 
@@ -69,6 +69,6 @@ Windows GitHub Actions 会运行测试、编译应用并生成包含 Plus 启动
 
 OpenRead is an independent GPL-3.0-or-later fork of ReadAny v1.3.6. It adds offline OCR for scanned PDFs (Simplified Chinese, Traditional Chinese and English), page-range jobs with cancellation and persistent results, AI/CLI access to recognized text, and a Windows launcher that preserves the existing ChatGPT subscription connection and model selection fixes.
 
-Download the portable Windows ZIP from Releases, extract it to a permanent directory, and run `Setup-OpenRead.cmd`. In the PDF reader, select **Recognize PDF text (OCR)**. The original PDF remains unchanged. Recognition results can be exported as text; this version does not insert a searchable text layer into the PDF.
+Download the Android APK or portable Windows ZIP from Releases. On Windows, extract the ZIP and run `Setup-OpenRead.cmd`. In the PDF reader, choose **Recognize PDF text (OCR)** on Windows or **OCR** on Android. Select a page range, run OCR, and choose **Export EPUB** to create a reflowable book with a page-numbered table of contents.
 
 Build commands above use Node.js 24+, pnpm 9.15.0 and Tauri's native prerequisites. Internal ReadAny identifiers are intentionally retained for data compatibility. See LICENSE and NOTICE.md for attribution.

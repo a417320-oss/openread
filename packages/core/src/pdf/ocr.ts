@@ -76,20 +76,20 @@ export async function runOcrPages(options: {
     empty: 0,
   };
   for (let page = start; page <= end; page++) {
-    signal.throwIfAborted();
+    if (signal.aborted) throw new Error("OCR cancelled");
     progress.page = page;
     options.onProgress({ ...progress });
-    const cached = await options.readCached(page);
-    const native = await options.readNativeText(page);
-    signal.throwIfAborted();
-    if (
-      !options.force &&
-      ((cached?.text.trim() && cached.language === options.language) || hasReadableText(native))
-    ) {
+    const cached = options.force ? null : await options.readCached(page);
+    const reusable = !options.force && (
+      (cached?.text.trim() && cached.language === options.language) ||
+      hasReadableText(await options.readNativeText(page))
+    );
+    if (signal.aborted) throw new Error("OCR cancelled");
+    if (reusable) {
       progress.reused++;
     } else {
       const result = await options.recognize(page);
-      signal.throwIfAborted();
+      if (signal.aborted) throw new Error("OCR cancelled");
       const text = result.text.trim();
       // A blank/failed re-recognition must not destroy a previously useful page.
       if (text) {

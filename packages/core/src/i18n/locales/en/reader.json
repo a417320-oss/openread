@@ -147,6 +147,7 @@
   "ocr": {
     "title": "Recognize PDF text (OCR)",
     "description": "Recognize scanned pages locally. Results are saved for the AI assistant; the source PDF is unchanged.",
+    "mobileDescription": "Recognize scanned pages offline, then export the text as an EPUB.",
     "pages": "PDF pages: {{total}}. Use PDF page numbers, not printed page labels.",
     "from": "First page",
     "to": "Last page",
@@ -157,9 +158,15 @@
     "start": "Start recognition",
     "cancel": "Cancel",
     "export": "Export text",
+    "exportEpub": "Export EPUB",
     "exported": "Text exported.",
+    "mobileExported": "EPUB created: {{name}}",
+    "epubPage": "PDF page {{page}}",
+    "engineFailed": "Could not load the OCR engine. Close this screen and reopen it to retry.",
+    "pdfMissing": "The PDF file is unavailable on this device.",
     "invalidRange": "Enter a whole-number page range between 1 and {{total}}.",
     "complete": "Saved {{recognized}} pages; reused {{reused}} pages; {{empty}} pages had no recognizable text. You can now ask the AI about these pages.",
+    "mobileComplete": "Saved {{recognized}} pages; reused {{reused}} pages; {{empty}} pages had no recognizable text.",
     "cancelled": "Cancelled. Completed pages are saved; running this range again will reuse them.",
     "noText": "No text available in this range. Run recognition first."
   }

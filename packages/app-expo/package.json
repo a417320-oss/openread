@@ -1,6 +1,6 @@
 {
   "name": "@readany/app-expo",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "private": true,
   "main": "index.js",
   "expo": {
@@ -29,7 +29,7 @@
     "ios:simulator": "APP_VARIANT=development pnpm run build:reader && APP_VARIANT=development node scripts/configure-native-variant.js && APP_VARIANT=development expo run:ios",
     "preprebuild": "pnpm run build:reader",
     "prebuild": "expo prebuild",
-    "build:reader": "node scripts/build-reader.js",
+    "build:reader": "node scripts/build-reader.js && node scripts/build-ocr.mjs",
     "sync:native-variant": "node scripts/configure-native-variant.js",
     "lint": "biome check .",
     "test": "vitest run",

@@ -98,6 +98,37 @@ export function buildStoreOnlyZip(entries: ZipEntry[]): Uint8Array {
   return buf;
 }
 
+/** Read an archive written by buildStoreOnlyZip. Names are checked by the caller before extraction. */
+export function* readStoreOnlyZip(bytes: Uint8Array): Iterable<ZipEntry> {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const decoder = new TextDecoder();
+  const end = bytes.length - 22;
+  if (end < 0 || view.getUint32(end, true) !== 0x06054b50) throw new Error("Invalid ZIP trailer");
+  const count = view.getUint16(end + 10, true);
+  const directory = view.getUint32(end + 16, true);
+  if (directory > end) throw new Error("Invalid ZIP directory");
+  let offset = 0;
+  for (let index = 0; index < count; index++) {
+    if (offset + 30 > directory || view.getUint32(offset, true) !== 0x04034b50 ||
+      view.getUint16(offset + 6, true) || view.getUint16(offset + 8, true)) {
+      throw new Error("Invalid uncompressed ZIP header");
+    }
+    const length = view.getUint32(offset + 18, true);
+    const nameStart = offset + 30;
+    const nameEnd = nameStart + view.getUint16(offset + 26, true);
+    const dataStart = nameEnd + view.getUint16(offset + 28, true);
+    const next = dataStart + length;
+    if (next > directory || length !== view.getUint32(offset + 22, true)) {
+      throw new Error("Invalid ZIP entry length");
+    }
+    const data = bytes.subarray(dataStart, next);
+    if (crc32(data) !== view.getUint32(offset + 14, true)) throw new Error("Invalid ZIP checksum");
+    yield { name: decoder.decode(bytes.subarray(nameStart, nameEnd)), data };
+    offset = next;
+  }
+  if (offset !== directory) throw new Error("Invalid ZIP entry count");
+}
+
 const crc32Table = new Uint32Array(256);
 for (let i = 0; i < 256; i++) {
   let c = i;

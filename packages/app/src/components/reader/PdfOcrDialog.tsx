@@ -6,7 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getRecognizedText, openOcrPdf, recognizePdf } from "@/lib/pdf-ocr";
+import { getRecognizedPages, openOcrPdf, recognizePdf } from "@/lib/pdf-ocr";
+import { buildPdfOcrEpub, pdfOcrLanguageTag } from "@readany/core/pdf/ocr-epub";
 import { validatePageRange, type OcrProgress } from "@readany/core/pdf/ocr";
 import type { Book } from "@readany/core/types";
 import { useEffect, useRef, useState } from "react";
@@ -30,6 +31,7 @@ export function PdfOcrDialog({
   const [language, setLanguage] = useState("chi_sim+eng");
   const [force, setForce] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [progress, setProgress] = useState<OcrProgress | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -98,27 +100,43 @@ export function PdfOcrDialog({
     }
   };
 
-  const exportText = async () => {
+  const exportFile = async (format: "txt" | "epub") => {
     setError("");
+    setMessage("");
+    setExporting(true);
     try {
       validatePageRange(start, end, total);
-      const text = await getRecognizedText(book, start, end);
-      if (!text) {
+      const { pages, fingerprint } = await getRecognizedPages(book, start, end);
+      if (!pages.length) {
         setError(t("ocr.noText"));
         return;
       }
       const { save } = await import("@tauri-apps/plugin-dialog");
       const path = await save({
-        defaultPath: `OpenRead-OCR-${start}-${end}.txt`,
-        filters: [{ name: "Text", extensions: ["txt"] }],
+        defaultPath: `OpenRead-OCR-${start}-${end}.${format}`,
+        filters: [{ name: format.toUpperCase(), extensions: [format] }],
       });
       if (path) {
-        const { writeTextFile } = await import("@tauri-apps/plugin-fs");
-        await writeTextFile(path, text);
+        const { writeFile, writeTextFile } = await import("@tauri-apps/plugin-fs");
+        if (format === "epub") {
+          await writeFile(path, buildPdfOcrEpub({
+            title: book.meta.title,
+            author: book.meta.author,
+            identifier: `urn:openread:ocr:${fingerprint}:${start}-${end}`,
+            language: pdfOcrLanguageTag(language),
+            pages,
+            pageTitle: page => t("ocr.epubPage", { page }),
+            contentsTitle: t("reader.toc", "Contents"),
+          }));
+        } else {
+          await writeTextFile(path, pages.map(({ page, text }) => `[PDF ${page}]\n${text}`).join("\n\n"));
+        }
         setMessage(t("ocr.exported"));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -126,7 +144,7 @@ export function PdfOcrDialog({
     <Dialog
       open={open}
       onOpenChange={(value) => {
-        if (!busy) onOpenChange(value);
+        if (!busy && !exporting) onOpenChange(value);
       }}
     >
       <DialogContent className="max-w-xl">
@@ -216,15 +234,18 @@ export function PdfOcrDialog({
         )}
         <p className="text-xs text-muted-foreground">{t("ocr.hint")}</p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={exportText} disabled={busy || !total}>
+          <Button variant="outline" onClick={() => void exportFile("txt")} disabled={busy || exporting || !total}>
             {t("ocr.export")}
+          </Button>
+          <Button variant="outline" onClick={() => void exportFile("epub")} disabled={busy || exporting || !total}>
+            {t("ocr.exportEpub")}
           </Button>
           {busy ? (
             <Button variant="outline" onClick={() => controller.current?.abort()}>
               {t("ocr.cancel")}
             </Button>
           ) : (
-            <Button onClick={run} disabled={!total}>
+            <Button onClick={run} disabled={exporting || !total}>
               {t("ocr.start")}
             </Button>
           )}

@@ -20,6 +20,8 @@ test("OpenRead APK has its own name, application ID and links", () => {
   assert.equal(config.slug, "openread");
   assert.equal(config.scheme, "openread");
   assert.equal(config.android.package, "io.github.a417320oss.openread");
+  assert.equal(config.android.versionCode, 2);
+  assert.equal(config.version, "1.4.1");
   assert.notEqual(config.android.package, readExpoConfig("production").android.package);
   assert.equal(config.extra.eas, undefined);
 });

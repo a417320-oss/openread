@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$PackageDirectory,[string]$ExpectedVersion='1.4.0')
+param([Parameter(Mandatory=$true)][string]$PackageDirectory,[string]$ExpectedVersion='1.4.1')
 $ErrorActionPreference='Stop'
 $exe=Join-Path $PackageDirectory 'runtime\app.exe'
 $info=(Get-Item -LiteralPath $exe).VersionInfo

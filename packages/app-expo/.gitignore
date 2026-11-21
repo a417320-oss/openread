@@ -3,6 +3,7 @@ dist/
 .expo/
 ios/
 android/
+assets/ocr-runtime.bin
 !modules/*/ios/
 modules/*/ios/build/
 !modules/*/ios/*.podspec

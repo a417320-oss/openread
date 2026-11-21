@@ -147,6 +147,7 @@
   "ocr": {
     "title": "识别 PDF 图片文字",
     "description": "在本机识别扫描页，结果自动保存并提供给 AI 阅读助手，原 PDF 不变。",
+    "mobileDescription": "在手机上离线识别扫描页，可将文字导出为 EPUB。",
     "pages": "共 {{total}} 页。请填写 PDF 页码，不是书中印刷页码。",
     "from": "起始页",
     "to": "结束页",
@@ -157,9 +158,15 @@
     "start": "开始识别",
     "cancel": "取消识别",
     "export": "导出文字",
+    "exportEpub": "导出 EPUB",
     "exported": "文字已导出。",
+    "mobileExported": "已生成 EPUB：{{name}}",
+    "epubPage": "PDF 第 {{page}} 页",
+    "engineFailed": "无法加载识别引擎，请关闭此界面后重试。",
+    "pdfMissing": "此设备上找不到 PDF 文件。",
     "invalidRange": "请输入 1 至 {{total}} 之间的整数页码，结束页不能小于起始页。",
     "complete": "已保存 {{recognized}} 页，复用 {{reused}} 页，{{empty}} 页未识别到文字。现在可以让 AI 阅读这些页。",
+    "mobileComplete": "已保存 {{recognized}} 页，复用 {{reused}} 页，{{empty}} 页未识别到文字。",
     "cancelled": "已取消，完成的页面已保存。再次处理相同范围会复用已识别结果。",
     "noText": "此范围暂无可用文字，请先进行识别。"
   }

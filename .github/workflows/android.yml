@@ -1,7 +1,7 @@
 name: OpenRead Android APK
 on:
   push:
-    branches: [android-v1.4.0]
+    branches: [main, ocr-epub]
   workflow_dispatch:
 
 permissions:
@@ -33,11 +33,12 @@ jobs:
       - name: Install dependencies
         env:
           ONNXRUNTIME_NODE_INSTALL_CUDA: skip
-        run: pnpm --filter @readany/app-expo... --filter foliate-js... install --frozen-lockfile
+        run: pnpm --filter @readany/app-expo... --filter foliate-js... --filter app... install --frozen-lockfile
       - name: Test Android app configuration and mobile code
         run: |
           node --test deployment/openread-android.test.cjs
           pnpm --filter @readany/app-expo test
+          pnpm test:ocr
       - name: Generate Android project
         working-directory: packages/app-expo
         run: |

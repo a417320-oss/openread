@@ -6,7 +6,7 @@ module.exports = {
   expo: {
     name: variant.name,
     slug: variant.key === "openread" ? "openread" : "readany",
-    version: "1.4.0",
+    version: "1.4.1",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "automatic",
@@ -36,6 +36,7 @@ module.exports = {
       },
       softwareKeyboardLayoutMode: "resize",
       package: variant.androidPackage,
+      ...(variant.key === "openread" && { versionCode: 2 }),
       permissions: [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",

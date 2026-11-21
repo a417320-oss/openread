@@ -26,6 +26,15 @@ const CORS_HEADERS =
 
 const LIGHTTPD_CORS_CONFIG = `
 server.modules += ("mod_setenv")
+$HTTP["url"] =~ "^/openread-ocr/" {
+  mimetype.assign = (
+    ".html" => "text/html; charset=utf-8",
+    ".js" => "application/javascript",
+    ".mjs" => "application/javascript",
+    ".wasm" => "application/wasm",
+    "" => "application/octet-stream"
+  )
+}
 setenv.add-response-header = (
   "Access-Control-Allow-Origin" => "*",
   "Access-Control-Allow-Methods" => "GET, HEAD, OPTIONS",
@@ -334,6 +343,10 @@ const EXT_MIME: Record<string, string> = {
   ".cbz": "application/vnd.comicbook+zip",
   ".fb2": "application/x-fictionbook+xml",
   ".txt": "text/plain",
+  ".html": "text/html; charset=utf-8",
+  ".js": "application/javascript",
+  ".mjs": "application/javascript",
+  ".wasm": "application/wasm",
   ".ttf": "font/ttf",
   ".otf": "font/otf",
   ".woff": "font/woff",

@@ -1,7 +1,7 @@
 name: OpenRead Windows
 on:
   push:
-    branches: [main]
+    branches: [main, ocr-epub]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -40,6 +40,7 @@ jobs:
           cache-on-failure: true
       - name: Install dependencies
         run: |
+          $env:ONNXRUNTIME_NODE_INSTALL_CUDA = 'skip'
           pnpm --filter app... --filter @readany/cli... install --frozen-lockfile
           npm ci --prefix plus-bridge
       - name: Core tests
@@ -59,7 +60,7 @@ jobs:
       - name: Verify native application starts
         shell: pwsh
         run: |
-          $app = Start-Process -FilePath './packages/app/src-tauri/target/release/app.exe' -PassThru
+          $app = Start-Process -FilePath './packages/app/src-tauri/target/release/app.exe' -WindowStyle Hidden -PassThru
           if ($app.WaitForExit(10000)) { throw "OpenRead exited during startup: $($app.ExitCode)" }
           $app.CloseMainWindow() | Out-Null
           if (!$app.WaitForExit(10000)) { Stop-Process -Id $app.Id }
