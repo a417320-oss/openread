@@ -3,7 +3,7 @@ import { Directory, type File } from "expo-file-system";
 
 /** Copy the generated file to an Android folder the reader chooses in the system picker. */
 export async function saveOcrEpubToFolder(file: Pick<File, "name" | "bytes">): Promise<boolean> {
-  let folder: Directory;
+  let folder: Awaited<ReturnType<typeof Directory.pickDirectoryAsync>>;
   try {
     folder = await Directory.pickDirectoryAsync();
   } catch (error) {

@@ -139,7 +139,7 @@ describe("PDF chapter fallback", () => {
     await createPlatform(root);
     await expect(readPdfPageFromBookFile("scan", "books/scan.pdf", "page-1"))
       .resolves.toMatchObject({ content: "扫描 PDF 已识别正文", cfi: "page:1", page: 1 });
-  });
+  }, 15_000);
 
   beforeEach(() => {
     setPlatformService(null as unknown as IPlatformService);

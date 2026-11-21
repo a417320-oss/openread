@@ -27,4 +27,10 @@ describe("Android EPUB folder export", () => {
     await expect(saveOcrEpubToFolder({ name: "OpenRead.epub", bytes })).resolves.toBe(false);
     expect(bytes).not.toHaveBeenCalled();
   });
+
+  it("reports a folder picker failure so the reader can still share the file", async () => {
+    const error = new Error("Storage provider is unavailable");
+    vi.mocked(Directory.pickDirectoryAsync).mockRejectedValue(error);
+    await expect(saveOcrEpubToFolder({ name: "OpenRead.epub", bytes: vi.fn() })).rejects.toThrow(error);
+  });
 });
