@@ -18,7 +18,7 @@ function job(overrides: Partial<Parameters<typeof runOcrPages>[0]> = {}) {
     readNativeText: vi.fn(async () => ""),
     readCached: vi.fn(async (): Promise<OcrPage | null> => null),
     recognize: vi.fn(async () => ({ text: "扫描图像中的文字", confidence: 95 })),
-    save: vi.fn(async () => {}),
+    save: vi.fn(async (_page: OcrPage) => {}),
     onProgress: vi.fn(),
     ...overrides,
   };
@@ -43,15 +43,15 @@ describe("PDF OCR", () => {
   it("recognizes only the requested range and persists each page before advancing", async () => {
     const options = job();
     expect(await runOcrPages(options)).toMatchObject({ completed: 3, recognized: 3, total: 3 });
-    expect(options.recognize.mock.calls).toEqual([[2], [3], [4]]);
-    expect(options.save.mock.calls.map(([page]) => page.page)).toEqual([2, 3, 4]);
+    expect(vi.mocked(options.recognize).mock.calls).toEqual([[2], [3], [4]]);
+    expect(vi.mocked(options.save).mock.calls.map(([page]) => page.page)).toEqual([2, 3, 4]);
     expect(options.onProgress).toHaveBeenLastCalledWith(expect.objectContaining({ completed: 3 }));
   });
 
   it("reuses cached pages and native text; page numbers alone still require OCR", async () => {
     const options = job({
       readNativeText: vi.fn(async (p) => (p === 2 ? "Readable text ".repeat(10) : "123")),
-      readCached: vi.fn(async (p) =>
+      readCached: vi.fn(async (p: number): Promise<OcrPage | null> =>
         p === 3
           ? {
               version: 1,
@@ -65,7 +65,7 @@ describe("PDF OCR", () => {
       ),
     });
     expect(await runOcrPages(options)).toMatchObject({ recognized: 1, reused: 2 });
-    expect(options.recognize.mock.calls).toEqual([[4]]);
+    expect(vi.mocked(options.recognize).mock.calls).toEqual([[4]]);
     expect(hasReadableText("目录，。。 17")).toBe(false);
     expect(hasReadableText("中文文字".repeat(12))).toBe(true);
   });
@@ -101,6 +101,8 @@ describe("PDF OCR", () => {
       recognize: vi.fn(async () => ({ text: " ", confidence: 0 })),
     });
     expect(await runOcrPages(options)).toMatchObject({ empty: 3, recognized: 0, reused: 0 });
+    expect(options.readNativeText).not.toHaveBeenCalled();
+    expect(options.readCached).not.toHaveBeenCalled();
     expect(options.save).not.toHaveBeenCalled();
   });
 
