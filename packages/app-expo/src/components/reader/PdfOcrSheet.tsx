@@ -1,5 +1,6 @@
 import { usePdfOcrEngine } from "@/hooks/use-pdf-ocr-engine";
 import { prepareOcrRuntime } from "@/lib/reader/ocr-runtime";
+import { saveOcrEpubToFolder } from "@/lib/reader/save-ocr-epub";
 import { useColors } from "@/styles/theme";
 import { readOcrPage, saveOcrPage } from "@readany/core/pdf/ocr-cache";
 import {
@@ -16,7 +17,7 @@ import * as Sharing from "expo-sharing";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
+  ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
@@ -47,6 +48,7 @@ export function PdfOcrSheet({
   const [force, setForce] = useState(false);
   const [job, setJob] = useState<"ocr" | "export" | null>(null);
   const [progress, setProgress] = useState<OcrProgress>();
+  const [exportedFile, setExportedFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [unavailable, setUnavailable] = useState(false);
@@ -103,6 +105,30 @@ export function PdfOcrSheet({
     engine.fail(new Error(error));
   };
 
+  const shareEpub = async (file: File) => {
+    if (!await Sharing.isAvailableAsync()) throw new Error(t("ocr.sharingUnavailable"));
+    await Sharing.shareAsync(file.uri, { mimeType: OCR_EPUB_MIME, UTI: "org.idpf.epub-container" });
+  };
+
+  const deliverEpub = async (save: boolean) => {
+    if (!exportedFile || working.current) return;
+    working.current = true;
+    setJob("export");
+    setError("");
+    try {
+      if (save) {
+        if (await saveOcrEpubToFolder(exportedFile)) setMessage(t("ocr.exported"));
+      } else {
+        await shareEpub(exportedFile);
+      }
+    } catch (err) {
+      setError(String(err));
+    } finally {
+      working.current = false;
+      setJob(null);
+    }
+  };
+
   const run = async (type: "ocr" | "export") => {
     if (working.current || unavailable || !total) return;
     setMessage("");
@@ -119,6 +145,7 @@ export function PdfOcrSheet({
     working.current = true;
     setJob(type);
     setProgress(undefined);
+    setExportedFile(null);
     const readCached = (page: number) => readOcrPage(fingerprint, page);
     const abort = new AbortController();
     try {
@@ -158,9 +185,8 @@ export function PdfOcrSheet({
           contentsTitle: t("reader.toc", "Contents"),
         }));
         setMessage(t("ocr.mobileExported", { name: file.name }));
-        if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(file.uri, { mimeType: OCR_EPUB_MIME, UTI: "org.idpf.epub-container" });
-        }
+        if (Platform.OS === "android") setExportedFile(file);
+        else await shareEpub(file);
       }
     } catch (err) {
       if (abort.signal.aborted) setMessage(t("ocr.cancelled"));
@@ -258,6 +284,20 @@ export function PdfOcrSheet({
           )}
           {job === "export" && <ActivityIndicator color={colors.primary} />}
           {!!message && <Text accessibilityLiveRegion="polite" style={{ color: colors.foreground }}>{message}</Text>}
+          {exportedFile && (
+            <View style={styles.row}>
+              {[
+                { label: t("ocr.saveEpubFolder"), save: true },
+                { label: t("ocr.shareEpub"), save: false },
+              ].map(({ label, save }) => (
+                <Pressable key={label} accessibilityRole="button" disabled={job !== null}
+                  onPress={() => { void deliverEpub(save); }}
+                  style={[styles.control, { borderColor: colors.border }]}>
+                  <Text style={{ color: colors.foreground }}>{label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
           {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
         </ScrollView>
       </SafeAreaView>

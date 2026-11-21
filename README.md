@@ -4,7 +4,7 @@
 
 ### Android 试用包
 
-在 [最新发布页](https://github.com/a417320-oss/openread/releases/latest) 下载 `OpenRead-1.4.1-android-arm64.apk`，在 ARM64 安卓手机上打开安装。打开 PDF，轻点页面呼出工具栏，选择 **OCR**，识别所选页后点击 **导出 EPUB**，在系统分享菜单中选择保存位置或阅读应用。iPhone 暂无安装包。
+在 [最新发布页](https://github.com/a417320-oss/openread/releases/latest) 下载 `OpenRead-1.4.1-android-arm64.apk`，在 ARM64 安卓手机上打开安装。打开 PDF，轻点页面呼出工具栏，选择 **OCR**，识别所选页后点击 **导出 EPUB**，即可保存到文件夹或分享文件。iPhone 暂无安装包。
 
 从源码构建时，安装 JDK 17 与 Android SDK 36，然后在仓库根目录执行 `pnpm install --frozen-lockfile`。在 `packages/app-expo` 中设置 `APP_VARIANT=openread`，运行 `pnpm build:reader` 和 `pnpm exec expo prebuild --platform android --no-install`。进入生成的 `android` 目录，执行 `./gradlew :app:assembleRelease -PreactNativeArchitectures=arm64-v8a`（Windows 使用 `gradlew.bat`），并使用自己的 Android 密钥签名。
 

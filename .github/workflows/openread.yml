@@ -6,6 +6,8 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+env:
+  ONNXRUNTIME_NODE_INSTALL_CUDA: skip
 jobs:
   cli-linux:
     runs-on: ubuntu-latest
@@ -40,7 +42,6 @@ jobs:
           cache-on-failure: true
       - name: Install dependencies
         run: |
-          $env:ONNXRUNTIME_NODE_INSTALL_CUDA = 'skip'
           pnpm --filter app... --filter @readany/cli... install --frozen-lockfile
           npm ci --prefix plus-bridge
       - name: Core tests
