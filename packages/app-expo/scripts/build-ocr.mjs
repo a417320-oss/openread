@@ -9,11 +9,13 @@ const app = fileURLToPath(new URL("../", import.meta.url));
 const root = path.resolve(app, "../..");
 const staging = path.join(root, ".cache", "mobile-ocr-assets");
 await mkdir(staging, { recursive: true });
-execFileSync(process.execPath, [path.join(root, "scripts/prepare-ocr.mjs"), staging], { stdio: "inherit" });
+execFileSync(process.execPath, [path.join(root, "scripts/prepare-ocr.mjs"), staging, "--legacy-pdf"], { stdio: "inherit" });
 const [engine] = (await build({
   entryPoints: [path.join(app, "scripts/ocr-webview.ts")],
   platform: "browser",
   target: "es2022",
+  // Older Android WebViews need the Promise and URL polyfills from the legacy PDF.js build.
+  alias: { "pdfjs-dist": "pdfjs-dist/legacy/build/pdf.mjs" },
   bundle: true,
   minify: true,
   write: false,

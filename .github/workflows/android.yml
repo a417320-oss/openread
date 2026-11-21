@@ -43,6 +43,7 @@ jobs:
         working-directory: packages/app-expo
         run: |
           pnpm build:reader
+          node --test ../../deployment/openread-android-ocr.test.mjs
           pnpm exec expo prebuild --platform android --no-install
       - name: Build Android release APK
         working-directory: packages/app-expo/android

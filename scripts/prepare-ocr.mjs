@@ -33,8 +33,9 @@ for (const [name, dir] of [['tesseract.js', tesseract], ['tesseract.js-core', co
 await writeFile(path.join(output, 'NOTICE.txt'), 'OpenRead local OCR assets: Tesseract.js, tesseract.js-core and Tesseract language data. Apache-2.0. See licenses/ and project NOTICE.md.\n');
 // Match the PDF.js runtime version, including fonts for rendering scanned/mixed documents offline.
 const pdfjs = packageDir('pdfjs-dist');
+const pdfBuild = process.argv.includes('--legacy-pdf') ? 'legacy/build' : 'build';
 await mkdir(path.join(vendor, 'pdfjs-local'), { recursive: true });
-await copyFile(path.join(pdfjs, 'build/pdf.worker.mjs'), path.join(vendor, 'pdfjs-local/pdf.worker.mjs'));
+await copyFile(path.join(pdfjs, pdfBuild, 'pdf.worker.mjs'), path.join(vendor, 'pdfjs-local/pdf.worker.mjs'));
 for (const folder of ['cmaps', 'standard_fonts', 'wasm']) {
   await cp(path.join(pdfjs, folder), path.join(vendor, 'pdfjs-local', folder), { recursive: true });
 }
